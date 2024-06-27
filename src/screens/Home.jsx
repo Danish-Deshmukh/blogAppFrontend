@@ -1,5 +1,13 @@
-import {Alert, BackHandler, FlatList, StyleSheet, Text, ToastAndroid, View} from 'react-native';
-import React, {useCallback, useEffect, useState} from 'react';
+import {
+  Alert,
+  BackHandler,
+  FlatList,
+  StyleSheet,
+  Text,
+  ToastAndroid,
+  View,
+} from 'react-native';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {
   useInfiniteQuery,
   useQuery,
@@ -16,9 +24,13 @@ import Card from '../components/Card';
 import {moderateScale} from 'react-native-size-matters';
 import FoundationIcon from 'react-native-vector-icons/Foundation';
 import {TouchableOpacity} from 'react-native-gesture-handler';
-import {useFocusEffect} from '@react-navigation/native';
+import {useFocusEffect, useScrollToTop} from '@react-navigation/native';
 
 export default function Home() {
+  // Below ref is for When click on Home button then it will take you to top of the scrollable screen
+  const ref = useRef(null);
+  useScrollToTop(ref);
+
   const [exitApp, setExitApp] = useState(0);
   const backAction = () => {
     // THIS FUNCTION IS TO PRESS BACK TWO TIMES TO EXIT THE APP
@@ -44,7 +56,6 @@ export default function Home() {
       };
     }),
   );
-
 
   const client = useQueryClient();
 
@@ -240,6 +251,7 @@ export default function Home() {
         ) : selectedCategories === 1 ? (
           // SHOW ALL POSTS WITH PAGINATION
           <FlatList
+            ref={ref}
             data={posts}
             renderItem={({item}) => <Card item={item} />}
             onEndReachedThreshold={0.1}

@@ -4,6 +4,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  Image,
   View,
 } from 'react-native';
 import React, {useContext, useEffect, useMemo, useRef, useState} from 'react';
@@ -261,6 +262,20 @@ export default function PostDetailScreen(item) {
 
       {/* POST DETAILS */}
       <ScrollView style={styles.container}>
+        {data.image && (
+          <Image
+            style={{
+              width: '100%',
+              height: 200,
+              borderRadius: moderateScale(5),
+              marginBottom: moderateScale(10)
+            }}
+            source={{
+              uri: `${REST_API_BASE_URL}/image/${data.image}`,
+            }}
+          />
+        )}
+
         <Text style={[styles.text, styles.headingText]}>{data.title}</Text>
         <Text style={[styles.text, styles.autherText]}>auther: {auther}</Text>
         <Text style={[styles.text, styles.descText]}>{data.description}</Text>
@@ -292,7 +307,7 @@ const styles = StyleSheet.create({
   headingText: {
     textAlign: 'center',
     alignSelf: 'center',
-    fontSize: moderateScale(30),
+    fontSize: moderateScale(25),
     fontWeight: '600',
   },
   autherText: {

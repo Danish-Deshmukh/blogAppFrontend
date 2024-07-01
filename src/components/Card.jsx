@@ -6,12 +6,13 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React from 'react';
+import React, { useContext } from 'react';
 import {moderateScale, verticalScale} from 'react-native-size-matters';
 import {useNavigation} from '@react-navigation/native';
-import {REST_API_BASE_URL} from '../service/REST_API_BASE_URL';
+import { AuthContext } from '../context/AuthContext';
 
 export default function Card({item}) {
+  const {REST_API_BASE_URL} = useContext(AuthContext);
   const navigation = useNavigation();
   return (
     <TouchableOpacity

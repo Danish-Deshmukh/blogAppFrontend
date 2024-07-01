@@ -17,16 +17,14 @@ import FeatherIcons from 'react-native-vector-icons/Feather';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import axios from 'axios';
-import {REST_API_BASE_URL} from '../service/REST_API_BASE_URL';
 import {AuthContext} from '../context/AuthContext';
 import {Menu, Divider, Button} from 'react-native-paper';
 import {useQuery, useQueryClient} from '@tanstack/react-query';
-import {fetchPostById} from '../service/fetchPosts';
 import {pageNotFoundError, tockenExpire} from '../CustomeError/Error';
 
 export default function PostDetailScreen(item) {
   const post = item.route.params;
-  const {isAdmin, userInfo} = useContext(AuthContext);
+  const {isAdmin, userInfo, REST_API_BASE_URL} = useContext(AuthContext);
   const [auther, setAuther] = useState('Deshmukh Danish');
   const navigation = useNavigation();
   const client = useQueryClient();
@@ -37,6 +35,23 @@ export default function PostDetailScreen(item) {
   const closeMenu = () => setVisible(false);
 
   // Get Post BY id
+  const fetchPostById = async id => {
+    // console.log('page param');
+    // console.log(id);
+    const url = `${REST_API_BASE_URL}/posts/${id}`;
+  
+    const options = {
+      method: 'GET',
+    };
+    const res = await fetch(url, options);
+    // console.log(res);
+    if (!res.ok) {
+      throw new Error(`Faild to fetch Post by ID = ${id}`);
+    }
+    const json = await res.json();
+    // console.log(json)
+    return json;
+  };
   const id = post.id;
   const {
     data,

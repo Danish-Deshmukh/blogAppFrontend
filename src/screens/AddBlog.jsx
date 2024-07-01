@@ -4,7 +4,6 @@ import {moderateScale} from 'react-native-size-matters';
 import {AuthContext} from '../context/AuthContext';
 import Button from '../components/Button';
 import axios from 'axios';
-import {REST_API_BASE_URL} from '../service/REST_API_BASE_URL';
 import {useNavigation} from '@react-navigation/native';
 import {Formik} from 'formik';
 import {object, string, number, date, InferType} from 'yup';
@@ -13,19 +12,34 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native-gesture-handler';
-import {useQuery, useQueryClient} from '@tanstack/react-query';
+import {useQuery, useQueryClient, REST_API_BASE_URL} from '@tanstack/react-query';
 import {fetchAllCategories} from '../service/fetchPosts';
 import {launchImageLibrary} from 'react-native-image-picker';
 
 const AddBlog = item => {
   const readableItem = item.route.params;
-  const {userInfo, logout} = useContext(AuthContext);
+  const {userInfo, logout, } = useContext(AuthContext);
   const [post, setPost] = useState(readableItem);
   const [categoryId, setCategoryId] = useState();
   const navigation = useNavigation();
   const client = useQueryClient();
 
   // QUERY AND STATES FOR FETCHING CATEGORIES
+  const fetchAllCategories = async () => {
+    const url = `${REST_API_BASE_URL}api/v1/categories`;
+
+    const options = {
+      method: 'GET',
+    };
+
+    const res = await fetch(url, options);
+
+    if (!res.ok) {
+      throw new Error('Faild to fetch Categories');
+    }
+    const json = await res.json();
+    return json;
+  };
   const {
     data: categories,
     error: categoriesError,
@@ -119,7 +133,7 @@ const AddBlog = item => {
     formData.append('postDto', postDto);
 
     axios
-      .post(`${REST_API_BASE_URL}/posts`, formData, config)
+      .post(`${REST_API_BASE_URL}/api/v1/posts`, formData, config)
       .then(res => {
         console.log(res);
         Refresh();
@@ -171,7 +185,7 @@ const AddBlog = item => {
     formData.append('postDto', postDto);
 
     axios
-      .put(`${REST_API_BASE_URL}/posts/${ID}`, formData, config)
+      .put(`${REST_API_BASE_URL}/api/v1/posts/${ID}`, formData, config)
       .then(res => {
         console.log(res);
         Refresh();

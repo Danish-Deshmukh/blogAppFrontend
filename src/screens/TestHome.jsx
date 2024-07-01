@@ -11,10 +11,11 @@ import React, {useContext, useEffect, useState} from 'react';
 import Card from '../components/Card';
 import {moderateScale} from 'react-native-size-matters';
 import axios from 'axios';
-import {REST_API_BASE_URL} from '../service/REST_API_BASE_URL';
 import FoundationIcon from 'react-native-vector-icons/Foundation';
+import { AuthContext } from '../context/AuthContext';
 
 export default function TestHome() {
+  const {REST_API_BASE_URL} = useContext(AuthContext);
   // POSTS states
   const [posts, setPosts] = useState([]);
   const [problem, setProblem] = useState(true);

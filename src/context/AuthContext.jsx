@@ -1,8 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import React, {createContext, useEffect, useState} from 'react';
-import {REST_API_BASE_URL} from '../service/REST_API_BASE_URL';
-import { Alert } from 'react-native';
+import {Alert} from 'react-native';
 
 export const AuthContext = createContext();
 
@@ -11,11 +10,24 @@ export const AuthProvider = ({children}) => {
   const [isLoading, setIsLoading] = useState(false);
   const [splashLoading, setSplashLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [REST_API_BASE_URL, SetREST_API_BASE_URL] = useState('');
 
   useEffect(() => {
     isLoggedIn();
     findAdmin();
+    getRESTapiURL();
   }, []);
+
+  const getRESTapiURL = async () => {
+    console.log('get URL called ');
+    let url = await AsyncStorage.getItem('BaseUrl');
+    console.log(url);
+
+    const newUrl = url + '/api/v1';
+    SetREST_API_BASE_URL(newUrl);
+
+    console.log(newUrl);
+  };
 
   const findAdmin = async () => {
     console.log('finadmin calded');
@@ -28,6 +40,13 @@ export const AuthProvider = ({children}) => {
         setIsAdmin(true);
       }
     }
+  };
+
+  const getUrl = async () => {
+    console.log('get URL called ');
+    let url = await AsyncStorage.getItem('BaseUrl');
+    console.log(url);
+    return url;
   };
 
   const register = (name, username, email, password) => {
@@ -104,8 +123,6 @@ export const AuthProvider = ({children}) => {
     }
   };
 
-
-
   /// ERRORs that may accure
   const tockenExpireErr = () => {
     Alert.alert(
@@ -137,6 +154,7 @@ export const AuthProvider = ({children}) => {
         logout,
         isAdmin,
         tockenExpireErr,
+        REST_API_BASE_URL,
       }}>
       {children}
     </AuthContext.Provider>

@@ -21,12 +21,11 @@ import {useNavigation} from '@react-navigation/native';
 import {useQuery, useQueryClient} from '@tanstack/react-query';
 import {AuthContext} from '../context/AuthContext';
 import {ActivityIndicator, Menu} from 'react-native-paper';
-import {REST_API_BASE_URL} from '../service/REST_API_BASE_URL';
 import {pageNotFoundError, tockenExpire} from '../CustomeError/Error';
 
 const ShowPostComments = item => {
   const id = item.route.params;
-  const {isAdmin, userInfo, logout} = useContext(AuthContext);
+  const {isAdmin, userInfo, logout, REST_API_BASE_URL} = useContext(AuthContext);
   const navigation = useNavigation();
   const client = useQueryClient();
 

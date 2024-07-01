@@ -21,6 +21,7 @@ import CommentsCard from './screens/CommentsCard';
 import TestHome from './screens/TestHome';
 import ShowPostComments from './screens/ShowPostComments';
 import CheatSheet from './forDelete/CheatSheet';
+import AddUrlScreen from './screens/AddUrlScreen';
 
 const NativeSTACK = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -166,6 +167,15 @@ export default function Navigation() {
           component={PostDetailScreen}
           options={{
             headerShown: false,
+            animation: 'flip',
+            headerTitle: 'Back',
+          }}
+        />
+        <NativeSTACK.Screen
+          name="AddUrlScreen"
+          component={AddUrlScreen}
+          options={{
+            headerShown: true,
             animation: 'flip',
             headerTitle: 'Back',
           }}

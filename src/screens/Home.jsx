@@ -5,28 +5,36 @@ import {
   StyleSheet,
   Text,
   ToastAndroid,
+  TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import {
   useInfiniteQuery,
   useQuery,
   useQueryClient,
-  useSuspenseInfiniteQuery,
 } from '@tanstack/react-query';
 import {ActivityIndicator} from 'react-native-paper';
-import {
-  fetchAllCategories,
-  fetchAllPosts,
-  fetchPostsByCategory,
-} from '../service/fetchPosts';
 import Card from '../components/Card';
 import {moderateScale} from 'react-native-size-matters';
 import FoundationIcon from 'react-native-vector-icons/Foundation';
-import {TouchableOpacity} from 'react-native-gesture-handler';
-import {useFocusEffect, useScrollToTop} from '@react-navigation/native';
+import {
+  useFocusEffect,
+  useNavigation,
+  useScrollToTop,
+} from '@react-navigation/native';
+import {AuthContext} from '../context/AuthContext';
 
 export default function Home() {
+  const {REST_API_BASE_URL} = useContext(AuthContext);
+  const navigation = useNavigation();
+
   // Below ref is for When click on Home button then it will take you to top of the scrollable screen
   const ref = useRef(null);
   useScrollToTop(ref);
@@ -60,6 +68,29 @@ export default function Home() {
   const client = useQueryClient();
 
   // QUERY FOR FETCHING POSTS
+  const fetchAllPosts = async pageParam => {
+
+    console.log('get all posts method is called ');
+    console.log(REST_API_BASE_URL);
+
+    let pageNO = pageParam.pageParam;
+
+    const url = `${REST_API_BASE_URL}/posts?pageSize=10&pageNo=${pageNO}&sortBy=id&sortDir=desc`;
+
+    const options = {
+      method: 'GET',
+    };
+
+    const res = await fetch(url, options);
+
+    if (!res.ok) {
+      throw new Error('not able to fetch Posts');
+    }
+    const json = await res.json();
+
+    return json.content;
+  };
+
   const {data, isLoading, error, fetchNextPage, isFetchingNextPage} =
     useInfiniteQuery({
       queryKey: ['posts'],
@@ -70,6 +101,21 @@ export default function Home() {
   const posts = data?.pages.flat();
 
   // QUERY AND STATES FOR FETCHING CATEGORIES
+  const fetchAllCategories = async () => {
+    const url = `${REST_API_BASE_URL}/categories`;
+  
+    const options = {
+      method: 'GET',
+    };
+  
+    const res = await fetch(url, options);
+  
+    if (!res.ok) {
+      throw new Error('Faild to fetch Categories');
+    }
+    const json = await res.json();
+    return json;
+  };
   const [selectedCategories, setSelectedCategories] = useState(1);
   const {
     data: categories,
@@ -81,6 +127,21 @@ export default function Home() {
   });
 
   // QUERY FOR FETCHING POSTS BY CATEGORY
+  const fetchPostsByCategory = async id => {
+    const url = `${REST_API_BASE_URL}/categories/category/${id}`;
+  
+    const options = {
+      method: 'GET',
+    };
+  
+    const res = await fetch(url, options);
+  
+    if (!res.ok) {
+      throw new Error('Faild to fetch Posts by this category');
+    }
+    const json = await res.json();
+    return json;
+  };
   const {data: postByCategory} = useQuery({
     queryKey: ['postByCategory'],
     queryFn: () => fetchPostsByCategory(selectedCategories),
@@ -116,21 +177,42 @@ export default function Home() {
           </Text>
         </View>
 
-        {/* REFRESH BUTTON */}
-        <TouchableOpacity
-          onPress={() => {
-            Refresh();
-            console.log('refresh called');
-          }}
+        <View
           style={{
-            marginRight: moderateScale(10),
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            // borderWidth: 1,
+            width: '40%',
           }}>
-          <FoundationIcon
-            name={'refresh'}
-            size={moderateScale(30)}
-            color="black"
-          />
-        </TouchableOpacity>
+          {/* ADD URL Button here */}
+          <TouchableOpacity
+            onPress={() => navigation.navigate('AddUrlScreen')}
+            style={{
+              borderWidth: 1,
+              width: '40%',
+              justifyContent: 'center',
+              alignItems: 'center',
+              borderRadius: moderateScale(10),
+            }}>
+            <Text>Add url</Text>
+          </TouchableOpacity>
+
+          {/* REFRESH BUTTON */}
+          <TouchableOpacity
+            onPress={() => {
+              Refresh();
+              console.log('refresh called');
+            }}
+            style={{
+              marginRight: moderateScale(10),
+            }}>
+            <FoundationIcon
+              name={'refresh'}
+              size={moderateScale(30)}
+              color="black"
+            />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* CATEGORYS */}

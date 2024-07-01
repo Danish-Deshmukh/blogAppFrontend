@@ -1,6 +1,12 @@
-import {REST_API_BASE_URL} from './REST_API_BASE_URL';
+import { useContext } from 'react';
+import { AuthContext } from '../context/AuthContext';
 
 export const fetchAllPosts = async pageParam => {
+  const {REST_API_BASE_URL} = useContext(AuthContext);
+
+  console.log("get all posts method is called ");
+  console.log(REST_API_BASE_URL)
+
   let pageNO = pageParam.pageParam;
 
   const url = `${REST_API_BASE_URL}/posts?pageSize=10&pageNo=${pageNO}&sortBy=id&sortDir=desc`;

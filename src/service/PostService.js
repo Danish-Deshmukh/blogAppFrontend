@@ -1,5 +1,5 @@
 import axios from 'axios';
-import {REST_API_BASE_URL} from './REST_API_BASE_URL';
+// import {REST_API_BASE_URL} from './REST_API_BASE_URL';
 
 // GETALL
 export const listAllPost = () => {

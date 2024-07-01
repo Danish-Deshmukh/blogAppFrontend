@@ -16,11 +16,10 @@ import {AuthContext} from '../context/AuthContext';
 import {Button, IconButton, Menu} from 'react-native-paper';
 import {useQueryClient} from '@tanstack/react-query';
 import axios from 'axios';
-import {REST_API_BASE_URL} from '../service/REST_API_BASE_URL';
 import {pageNotFoundError, tockenExpire} from '../CustomeError/Error';
 
 const CommentCard = ({id, item}) => {
-  const {isAdmin, userInfo} = useContext(AuthContext);
+  const {isAdmin, userInfo, REST_API_BASE_URL} = useContext(AuthContext);
   const client = useQueryClient();
   const [editComment, setEditComment] = useState(false);
 

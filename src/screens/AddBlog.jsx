@@ -12,13 +12,13 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native-gesture-handler';
-import {useQuery, useQueryClient, REST_API_BASE_URL} from '@tanstack/react-query';
+import {useQuery, useQueryClient} from '@tanstack/react-query';
 import {fetchAllCategories} from '../service/fetchPosts';
 import {launchImageLibrary} from 'react-native-image-picker';
 
 const AddBlog = item => {
   const readableItem = item.route.params;
-  const {userInfo, logout, } = useContext(AuthContext);
+  const {userInfo, logout, REST_API_BASE_URL} = useContext(AuthContext);
   const [post, setPost] = useState(readableItem);
   const [categoryId, setCategoryId] = useState();
   const navigation = useNavigation();
@@ -113,6 +113,9 @@ const AddBlog = item => {
   };
 
   const submitPost = (title, description, content) => {
+    console.log('submit button called');
+    console.log(REST_API_BASE_URL);
+
     const formData = new FormData();
     const image = imageDetail;
 
@@ -133,7 +136,7 @@ const AddBlog = item => {
     formData.append('postDto', postDto);
 
     axios
-      .post(`${REST_API_BASE_URL}/api/v1/posts`, formData, config)
+      .post(`${REST_API_BASE_URL}/posts`, formData, config)
       .then(res => {
         console.log(res);
         Refresh();
@@ -185,7 +188,7 @@ const AddBlog = item => {
     formData.append('postDto', postDto);
 
     axios
-      .put(`${REST_API_BASE_URL}/api/v1/posts/${ID}`, formData, config)
+      .put(`${REST_API_BASE_URL}/posts/${ID}`, formData, config)
       .then(res => {
         console.log(res);
         Refresh();

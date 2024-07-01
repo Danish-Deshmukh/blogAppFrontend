@@ -40,9 +40,9 @@ export default function Card({item}) {
               // borderWidth: 1,
             }
           }>
-          <Text style={[styles.text, styles.titleText]} numberOfLines={1}>
+          {/* <Text style={[styles.text, styles.titleText]} numberOfLines={1}>
             {item.id}
-          </Text>
+          </Text> */}
           <Text style={[styles.text, styles.titleText]} numberOfLines={4}>
             {item.title}
           </Text>

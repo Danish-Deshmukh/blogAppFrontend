@@ -1,4 +1,4 @@
-import {Alert, StyleSheet, Text, TextInput, View} from 'react-native';
+import {Alert, Image, StyleSheet, Text, TextInput, View} from 'react-native';
 import React, {useContext, useEffect, useState} from 'react';
 import {moderateScale} from 'react-native-size-matters';
 import {AuthContext} from '../context/AuthContext';
@@ -15,11 +15,11 @@ import {
 } from 'react-native-gesture-handler';
 import {useQuery, useQueryClient} from '@tanstack/react-query';
 import {fetchAllCategories} from '../service/fetchPosts';
+import {launchImageLibrary} from 'react-native-image-picker';
 
 const AddBlog = item => {
   const readableItem = item.route.params;
   const {userInfo, logout} = useContext(AuthContext);
-  const [expiredToken, setExpiredToken] = useState(false);
   const [post, setPost] = useState(readableItem);
   const [categoryId, setCategoryId] = useState();
   const navigation = useNavigation();
@@ -35,15 +35,50 @@ const AddBlog = item => {
     queryFn: fetchAllCategories,
   });
 
+  // Add image states and functions
+  const [image, setImage] = useState(null);
+  const [imageDetail, setImageDetails] = useState(null);
+  const openImagePicker = async () => {
+    const options = {
+      title: 'Select Image',
+      type: 'library',
+      options: {
+        mediaType: 'photo',
+        includeBase64: false,
+        maxHeight: 2000,
+        maxWidth: 2000,
+        selectionLimit: 1,
+      },
+    };
+
+    const image = await launchImageLibrary(options);
+    let imageUri = image.uri || image.assets?.[0]?.uri;
+
+    if (image.didCancel === true) {
+      setImage(null);
+      setImageDetails(null);
+    } else {
+      setImage(imageUri);
+      setImageDetails(image);
+    }
+  };
+
   useEffect(() => {
     if (readableItem) {
-      console.log('----------------');
+      console.log('----------> added update fields ');
       setCategoryId(readableItem.categoryId);
+      const imgeUrl = `${REST_API_BASE_URL}/image/${readableItem.image}`;
+      setImage(imgeUrl);
     }
   }, []);
   const Refresh = () => {
     client.invalidateQueries(['posts']);
     client.invalidateQueries(['postDetail']);
+  };
+  const ClearDataFromUI = () => {
+    setImage(null);
+    setImageDetails(null);
+    setCategoryId(null);
   };
   let userSchema = object({
     title: string()
@@ -59,58 +94,89 @@ const AddBlog = item => {
   const config = {
     headers: {
       Authorization: `Bearer ${userInfo.accessToken}`,
+      'Content-Type': 'multipart/form-data',
     },
   };
 
   const submitPost = (title, description, content) => {
+    const formData = new FormData();
+    const image = imageDetail;
+
+    formData.append('file', {
+      uri: image.assets?.[0]?.uri,
+      type: image.assets?.[0]?.type,
+      name: image.assets?.[0]?.fileName,
+      fileName: image.assets?.[0]?.fileName,
+    });
+
+    const postDto = JSON.stringify({
+      title: title,
+      description: description,
+      content: content,
+      categoryId: categoryId,
+    });
+
+    formData.append('postDto', postDto);
+
     axios
-      .post(
-        `${REST_API_BASE_URL}/posts`,
-        {
-          title,
-          description,
-          content,
-          categoryId,
-        },
-        config,
-      )
+      .post(`${REST_API_BASE_URL}/posts`, formData, config)
       .then(res => {
         console.log(res);
         Refresh();
+        ClearDataFromUI();
         navigation.navigate('Home');
       })
       .catch(e => {
-        console.log(`register error hehehehehe ${e}`);
+        console.log(`error------------> ${e}`);
 
-        console.log(e.response.status);
-        if (e.response.status === 404) {
-          pageNotFoundError();
-        }
+        // console.log(e.response.status);
+        // if (e.response.status === 404) {
+        //   pageNotFoundError();
+        // }
 
-        if (e.response.status === 401) {
-          tockenExpire();
-        }
+        // if (e.response.status === 401) {
+        //   tockenExpire();
+        // }
       });
   };
   const updatePost = (title, description, content) => {
     console.log('Update method called');
     const ID = post.id;
 
+    const formData = new FormData();
+    const image = imageDetail;
+
+    if (image != null) {
+      formData.append('file', {
+        uri: image.assets?.[0]?.uri,
+        type: image.assets?.[0]?.type,
+        name: image.assets?.[0]?.fileName,
+        fileName: image.assets?.[0]?.fileName,
+      });
+    }
+    // else {
+    //   console.log('else block called');
+    //   console.log(image);
+
+    //   formData.append('file', new Blob(), '');
+    // }
+
+    const postDto = JSON.stringify({
+      title: title,
+      description: description,
+      content: content,
+      categoryId: categoryId,
+    });
+
+    formData.append('postDto', postDto);
+
     axios
-      .put(
-        `${REST_API_BASE_URL}/posts/${ID}`,
-        {
-          title,
-          description,
-          content,
-          categoryId,
-        },
-        config,
-      )
+      .put(`${REST_API_BASE_URL}/posts/${ID}`, formData, config)
       .then(res => {
         console.log(res);
         Refresh();
-        navigation.goBack();
+        ClearDataFromUI();
+        navigation.navigate('Home');
       })
       .catch(e => {
         console.log(`register error --------------> ${e}`);
@@ -166,6 +232,106 @@ const AddBlog = item => {
         flex: 1,
         padding: moderateScale(20),
       }}>
+      {/* // Handleing Image related thing below */}
+      <View
+        style={
+          {
+            // borderWidth: 1,
+          }
+        }>
+        {image === null ? (
+          // ADD Image button
+          <TouchableOpacity
+            onPress={openImagePicker}
+            style={{
+              borderWidth: 1,
+              padding: moderateScale(5),
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: moderateScale(5),
+              marginBottom: moderateScale(10),
+            }}>
+            <Text>Add Image </Text>
+          </TouchableOpacity>
+        ) : (
+          <View
+            style={{
+              // borderWidth: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+            <Image
+              source={{uri: image}}
+              style={{
+                width: '100%',
+                height: 200,
+                borderRadius: moderateScale(5),
+                marginBottom: moderateScale(10),
+                // resizeMode: 'contain',
+              }}
+            />
+            <View
+              style={{
+                // borderWidth: 1,
+                alignItems: 'center',
+                justifyContent: 'space-evenly',
+                marginBottom: moderateScale(10),
+                flexDirection: 'row',
+                width: '100%',
+              }}>
+              <TouchableOpacity
+                onPress={openImagePicker}
+                style={{
+                  borderWidth: 1,
+                  padding: moderateScale(5),
+                  borderRadius: moderateScale(5),
+                }}>
+                <Text
+                  style={{
+                    color: 'black',
+                    fontWeight: '500',
+                  }}>
+                  Update
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  Alert.alert(
+                    'Remove Image',
+                    'Are you sure you want to remove this image ??',
+                    [
+                      {
+                        text: 'Cancel',
+                        style: 'cancel',
+                      },
+                      {
+                        text: 'OK',
+                        onPress: () => {
+                          setImage(null);
+                          setImageDetails(null);
+                        },
+                      },
+                    ],
+                  );
+                }}
+                style={{
+                  borderWidth: 1,
+                  padding: moderateScale(5),
+                  borderRadius: moderateScale(5),
+                  backgroundColor: 'black',
+                }}>
+                <Text
+                  style={{
+                    color: 'white',
+                    fontWeight: '500',
+                  }}>
+                  Remove
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+      </View>
       <Formik
         validationSchema={userSchema}
         style={styles.wrapper}
@@ -183,10 +349,11 @@ const AddBlog = item => {
                 content: '',
               }
         }
-        onSubmit={values => {
+        onSubmit={(values, {resetForm}) => {
           post
             ? updatePost(values.title, values.description, values.content)
             : submitPost(values.title, values.description, values.content);
+          resetForm({values: ''});
         }}>
         {({handleChange, handleSubmit, values, errors}) => (
           <View>
@@ -297,36 +464,6 @@ const AddBlog = item => {
           </View>
         )}
       </Formik>
-      {/* TITL */}
-      {/* <Text style={styles.titleText}>Title : </Text>
-      <TextInput
-        style={styles.titleText}
-        value={title}
-        onChangeText={txt => setTitle(txt)}
-        multiline
-        placeholder="Enter title here..."
-      /> */}
-
-      {/* Description */}
-      {/* <Text style={styles.descriptionText}>Description : </Text>
-      <TextInput
-        style={styles.descriptionText}
-        value={description}
-        onChangeText={txt => setDescription(txt)}
-        multiline
-        placeholder="Enter Description Here"
-      /> */}
-
-      {/* Content */}
-
-      {/* <Text style={styles.contentText}>Content : </Text>
-      <TextInput
-        style={styles.contentText}
-        value={content}
-        onChangeText={txt => setContent(txt)}
-        multiline
-        placeholder="Enter Content Here"
-      /> */}
     </ScrollView>
   );
 };

@@ -157,7 +157,7 @@ export default function Navigation() {
           name="EditeProfile"
           component={EditeProfile}
           options={{
-            headerShown: false,
+            headerShown: true,
             animation: 'slide_from_right',
           }}
         />

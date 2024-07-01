@@ -39,9 +39,9 @@ export default function Card({item}) {
               // borderWidth: 1,
             }
           }>
-          {/* <Text style={[styles.text, styles.titleText]} numberOfLines={1}>
+          <Text style={[styles.text, styles.titleText]} numberOfLines={1}>
             {item.id}
-          </Text> */}
+          </Text>
           <Text style={[styles.text, styles.titleText]} numberOfLines={4}>
             {item.title}
           </Text>
@@ -75,8 +75,7 @@ export default function Card({item}) {
               style={{
                 width: '100%',
                 height: '100%',
-                borderRadius: moderateScale(5),
-                // opacity: 0.5,
+                borderRadius: moderateScale(2),
               }}
               source={{
                 uri: `${REST_API_BASE_URL}/image/${item.image}`,

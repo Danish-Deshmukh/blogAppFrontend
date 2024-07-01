@@ -75,8 +75,6 @@ export default function PostDetailScreen(item) {
     },
   };
   const updatePost = () => {
-    console.log('Update post called');
-    console.log(post);
     navigation.navigate('AddBlog', post);
     setVisible(false);
   };

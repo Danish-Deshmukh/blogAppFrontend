@@ -25,7 +25,8 @@ import {pageNotFoundError, tockenExpire} from '../CustomeError/Error';
 
 const ShowPostComments = item => {
   const id = item.route.params;
-  const {isAdmin, userInfo, logout, REST_API_BASE_URL} = useContext(AuthContext);
+  const {isAdmin, userInfo, logout, REST_API_BASE_URL} =
+    useContext(AuthContext);
   const navigation = useNavigation();
   const client = useQueryClient();
 
@@ -189,9 +190,10 @@ const ShowPostComments = item => {
   return (
     <View
       style={{
-        height: '100%',
         marginBottom: moderateScale(150),
-        // flex: 1,
+        flex: 1,
+        backgroundColor: 'white',
+        paddingBottom: 40,
         // borderWidth: 1
       }}>
       {/* Comments header */}

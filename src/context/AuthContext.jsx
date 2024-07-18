@@ -10,6 +10,7 @@ export const AuthProvider = ({children}) => {
   const [isLoading, setIsLoading] = useState(false);
   const [splashLoading, setSplashLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  // const [REST_API_BASE_URL, SetREST_API_BASE_URL] = useState('http://192.168.1.18:8080/api/v1');
   const [REST_API_BASE_URL, SetREST_API_BASE_URL] = useState('');
 
   useEffect(() => {
@@ -35,7 +36,6 @@ export const AuthProvider = ({children}) => {
     if (userInfooo) {
       userInfooo = JSON.parse(userInfooo);
       const role = userInfooo.role[0].id;
-      console.log(role);
       if (role === 2) {
         setIsAdmin(true);
       }

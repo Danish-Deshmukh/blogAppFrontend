@@ -1,153 +1,140 @@
-import {Alert, Image, StyleSheet, Text, TextInput, View} from 'react-native';
-import React from 'react';
-import {Formik} from 'formik';
-import {object, string, number, date, InferType} from 'yup';
+// Importing Libraries
+import {Button, StyleSheet, Text, TextInput, View} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import * as Yup from 'yup';
 
+// Yup Validation Schema for Sign Up
+const signUpSchema = Yup.object().shape({
+  email: Yup.string()
+    .email('Email is Invalid')
+    .required('Email Cannot Be Empty'),
+  password: Yup.string()
+    .min(10, 'Password Must have a Minimum if ten Characters')
+    .required('Password Cannot Be Empty'),
+  confirmPassword: Yup.string()
+    .oneOf([Yup.ref('password'), null], 'Passwords must match')
+    .required('Please Enter Password Again!'),
+});
+
+// React sign up page
 export default function EditeProfile() {
-  let userSchema = object({
-    title: string()
-      .required('Please Enter Title')
-      .min(3, 'Title must be 3 or more charactors'),
-    description: string()
-      .required('Please Enter Description')
-      .min(5, 'description should be 5 or more charactors'),
-    content: string()
-      .required('Please Enter Content')
-      .min(10, 'content should not be less then 10 charactors'),
-  });
+  // Declaring state variables
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [success, setSuccess] = useState(false);
+  const [errors, setErrors] = useState({});
+
+
+  // Sign Up Method
+  const signUp = async () => {
+    try {
+      // Awaiting for Yup to validate text
+      await signUpSchema.validate(
+        {email, password, confirmPassword},
+        {abortEarly: false},
+      );
+
+      // Reseting Warnings and displaying success message if all goes well
+      setErrors({});
+      setSuccess(true);
+    } catch (error) {
+      // Reseting Succes Message
+      setSuccess(false);
+
+      // Setting error messages identified by Yup
+      if (error instanceof Yup.ValidationError) {
+        // Extracting Yup specific validation errors from list of total errors
+        const yupErrors = {};
+        error.inner.forEach(innerError => {
+          yupErrors[innerError.path] = innerError.message;
+        });
+
+        // Saving extracted errors
+        setErrors(yupErrors);
+      }
+    }
+  };
+
+  // Sign Up Form Rendering
   return (
-    <View>
-      <Formik
-        validationSchema={userSchema}
-        style={styles.wrapper}
-        
-         
-        
-        onSubmit={values => {
-          post
-            ? updatePost(
-                setTitle(values.title),
-                setDescription(values.description),
-                setContent(values.content),
-              )
-            : setTitle(values.title),
-            setDescription(values.description),
-            setContent(values.content),
-            setTimeout(() => {
-              submitPost();
-            }, 0);
-        }}>
-        {({handleChange, handleSubmit, values, errors}) => (
-          <View>
-            <Text style={styles.titleText}>Title : </Text>
-            <TextInput
-              style={styles.titleText}
-              value={values.title}
-              onChangeText={handleChange('title')}
-              multiline
-              placeholder="Enter title here..."
-            />
-            {errors.title && (
-              <Text
-                style={{
-                  color: 'red',
-                  marginBottom: moderateScale(20),
-                  marginTop: moderateScale(-10),
-                }}>
-                {errors.title}
-              </Text>
-            )}
+    <View style={styles.centered}>
+      <Text style={styles.textTitle}>Email</Text>
+      <TextInput
+        style={styles.inputBox}
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
+      />
+      {errors.email && <Text style={styles.textWarning}>{errors.email}</Text>}
 
-            {/* Description */}
-            <Text style={styles.descriptionText}>Description : </Text>
-            <TextInput
-              style={styles.descriptionText}
-              value={values.description}
-              onChangeText={handleChange('description')}
-              // onBlur={handleBlur('title')}
-              multiline
-              placeholder="Enter description here..."
-            />
-            {errors.description && (
-              <Text
-                style={{
-                  color: 'red',
-                  marginBottom: moderateScale(20),
-                  marginTop: moderateScale(-10),
-                }}>
-                {errors.description}
-              </Text>
-            )}
+      <Text style={styles.textTitle}>Password</Text>
+      <TextInput
+        style={styles.inputBox}
+        placeholder="Password"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+      />
+      {errors.password && (
+        <Text style={styles.textWarning}>{errors.password}</Text>
+      )}
 
-            {/* Content */}
-            <Text style={styles.contentText}>Content : </Text>
-            <TextInput
-              style={styles.contentText}
-              value={values.content}
-              onChangeText={handleChange('content')}
-              // onBlur={handleBlur('title')}
-              multiline
-              placeholder="Enter content here..."
-            />
-            {errors.content && (
-              <Text
-                style={{
-                  color: 'red',
-                  marginBottom: moderateScale(20),
-                  marginTop: moderateScale(-10),
-                }}>
-                {errors.content}
-              </Text>
-            )}
+      <Text style={styles.textTitle}>Confirm Password</Text>
+      <TextInput
+        style={styles.inputBox}
+        placeholder="Confirm Password"
+        value={confirmPassword}
+        onChangeText={setConfirmPassword}
+        secureTextEntry
+      />
+      {errors.confirmPassword && (
+        <Text style={styles.textWarning}>{errors.confirmPassword}</Text>
+      )}
 
-            {/* SELECT CATEGORY */}
-            <View
-              style={{
-                borderWidth: 1,
-                padding: moderateScale(10),
-                borderRadius: moderateScale(10),
-                height: moderateScale(100),
-              }}>
-              <FlatList
-                horizontal={true}
-                data={categories}
-                keyExtractor={item => item.id.toString()}
-                renderItem={({item}) => (
-                  <TouchableOpacity
-                    onPress={() => {
-                      id = item.id;
-                      setCategoryId(id);
-                    }}
-                    style={{
-                      borderWidth: 0.8,
-                      borderColor: 'black',
-                      paddingVertical: moderateScale(6),
-                      paddingHorizontal: moderateScale(15),
-                      margin: moderateScale(4),
-                      marginTop: moderateScale(9),
-                      borderRadius: moderateScale(10),
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      backgroundColor:
-                        categoryId === item.id ? 'black' : 'white',
-                    }}>
-                    <Text
-                      style={{
-                        fontWeight: '600',
-                        color: categoryId === item.id ? 'white' : 'black',
-                      }}>
-                      {item.name}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              />
-            </View>
-            <Button onPress={handleSubmit} title={post ? 'Update' : 'Post'} />
-          </View>
-        )}
-      </Formik>
+      <View style={{padding: 10}} />
+      <Button title="SIGN UP" onPress={signUp} />
+      {success && <Text style={styles.textSuccess}>Success!</Text>}
     </View>
   );
 }
 
-const styles = StyleSheet.create({});
+// Style Sheet
+const styles = StyleSheet.create({
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  inputBox: {
+    borderBottomWidth: 3,
+    borderColor: 'grey',
+    fontSize: 20,
+    color: 'black',
+  },
+  textNormal: {
+    fontSize: 20,
+    color: 'black',
+  },
+  textTitle: {
+    fontSize: 20,
+    color: 'black',
+    fontWeight: 'bold',
+    paddingBottom: 15,
+    paddingTop: 15,
+  },
+  textWarning: {
+    fontSize: 20,
+    color: 'red',
+    paddingBottom: 5,
+    paddingTop: 5,
+  },
+  textSuccess: {
+    fontSize: 24,
+    color: 'green',
+    fontWeight: 'bold',
+    paddingBottom: 5,
+    paddingTop: 5,
+  },
+});

@@ -23,7 +23,9 @@ export default function Card({item}) {
         margin: moderateScale(5),
         borderRadius: moderateScale(5),
         height: verticalScale(160),
-        elevation: 1,
+        elevation: 2,
+        // borderWidth: 1,
+        backgroundColor: 'white',
         flexDirection: 'row',
       }}>
       <View

@@ -1,52 +1,72 @@
-import {Alert, Image, StyleSheet, Text, TextInput, View} from 'react-native';
+import {
+  Animated,
+  Alert,
+  Image,
+  StyleSheet,
+  Text,
+  TextInput,
+  ScrollView,
+  View,
+  TouchableOpacity,
+  FlatList,
+  Pressable,
+  ActivityIndicator,
+} from 'react-native';
 import React, {useContext, useEffect, useState} from 'react';
-import {moderateScale} from 'react-native-size-matters';
+import {moderateScale, verticalScale} from 'react-native-size-matters';
 import {AuthContext} from '../context/AuthContext';
 import Button from '../components/Button';
 import axios from 'axios';
-import {useNavigation} from '@react-navigation/native';
+import {PreventRemoveContext, useNavigation} from '@react-navigation/native';
 import {Formik} from 'formik';
-import {object, string, number, date, InferType} from 'yup';
-import {
-  FlatList,
-  ScrollView,
-  TouchableOpacity,
-} from 'react-native-gesture-handler';
-import {useQuery, useQueryClient} from '@tanstack/react-query';
-import {fetchAllCategories} from '../service/fetchPosts';
+import * as Yup from 'yup';
+import {QueryClient, useQuery, useQueryClient} from '@tanstack/react-query';
 import {launchImageLibrary} from 'react-native-image-picker';
+import FeatherIcons from 'react-native-vector-icons/Feather';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import AntDesign from 'react-native-vector-icons/AntDesign';
+import {ContinousBaseGesture} from 'react-native-gesture-handler/lib/typescript/handlers/gestures/gesture';
+import {
+  brown100,
+  deepPurpleA200,
+  deepPurpleA700,
+} from 'react-native-paper/lib/typescript/styles/themes/v2/colors';
+import {PointerType} from 'react-native-gesture-handler';
 
 const AddBlog = item => {
-  const readableItem = item.route.params;
+  const post = item.route.params;
   const {userInfo, logout, REST_API_BASE_URL} = useContext(AuthContext);
-  const [post, setPost] = useState(readableItem);
-  const [categoryId, setCategoryId] = useState();
+
   const navigation = useNavigation();
   const client = useQueryClient();
 
+  const scrollConst = verticalScale(50);
+  const scrollY = new Animated.Value(0);
+  const diffclamp = Animated.diffClamp(scrollY, 0, scrollConst);
+  const translateY = diffclamp.interpolate({
+    inputRange: [0, scrollConst],
+    outputRange: [0, -scrollConst],
+  });
+
+  const [postId, setPostId] = useState();
+  const [title, setTitle] = useState();
+  const [description, setDescription] = useState();
+  const [content, setContent] = useState('');
+  const [categoryId, setCategoryId] = useState();
+  const [category, setCategory] = useState(null);
+  const [forUpdate, setForUpdate] = useState(false);
+  const [errors, setErrors] = useState({});
+
   // QUERY AND STATES FOR FETCHING CATEGORIES
-  const fetchAllCategories = async () => {
-    const url = `${REST_API_BASE_URL}api/v1/categories`;
-
-    const options = {
-      method: 'GET',
-    };
-
-    const res = await fetch(url, options);
-
-    if (!res.ok) {
-      throw new Error('Faild to fetch Categories');
-    }
-    const json = await res.json();
-    return json;
-  };
+  const [showCategoryMenu, setShowCategoryMenu] = useState(false);
+  const [editCategory, setEditCategory] = useState(false);
   const {
     data: categories,
     error: categoriesError,
     isLoading: categoriesIsLoading,
   } = useQuery({
-    queryKey: ['categories'],
-    queryFn: fetchAllCategories,
+    queryKey: ['homeCategories'],
   });
 
   // Add image states and functions
@@ -77,15 +97,16 @@ const AddBlog = item => {
     }
   };
 
-  useEffect(() => {
-    if (readableItem) {
-      console.log('----------> added update fields ');
-      setCategoryId(readableItem.categoryId);
-      const imgeUrl = `${REST_API_BASE_URL}/image/${readableItem.image}`;
-      setImage(imgeUrl);
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (readableItem) {
+  //     console.log('----------> added update fields ');
+  //     setCategoryId(readableItem.categoryId);
+  //     const imgeUrl = `${REST_API_BASE_URL}/image/${readableItem.image}`;
+  //     setImage(imgeUrl);
+  //   }
+  // }, []);
   const Refresh = () => {
+    // client.clear();
     client.invalidateQueries(['posts']);
     client.invalidateQueries(['postDetail']);
   };
@@ -94,17 +115,65 @@ const AddBlog = item => {
     setImageDetails(null);
     setCategoryId(null);
   };
-  let userSchema = object({
-    title: string()
+  let userSchema = Yup.object().shape({
+    title: Yup.string()
       .required('Please Enter Title')
       .min(3, 'Title must be 3 or more charactors'),
-    description: string()
+    description: Yup.string()
       .required('Please Enter Description')
       .min(5, 'description should be 5 or more charactors'),
-    content: string()
+    content: Yup.string()
       .required('Please Enter Content')
       .min(10, 'content should not be less then 10 charactors'),
+    categoryId: Yup.number().required('Please Select Category'),
   });
+
+  const nextPage = async () => {
+    // console.log('next called');
+    // console.log(imageDetail);
+    try {
+      // console.log('inside the try block');
+      // Awaiting for Yup to validate text
+      await userSchema.validate(
+        {title, description, content, categoryId},
+        {abortEarly: false},
+      );
+
+      // Reseting Warnings and displaying success message if all goes well
+      const post = {
+        id: postId,
+        title: title,
+        description: description,
+        content: content,
+        categoryId: category.id,
+        image: imageDetail,
+        forUpdate: forUpdate,
+      };
+
+      // console.log(post);
+      // console.log(post.category);
+      // console.log(post.imageDetail);
+      // console.log(imageDetail);
+      navigation.navigate('PreviewScreen', post);
+
+      setErrors({});
+    } catch (error) {
+      console.log('inside the catch block');
+      // Reseting Succes Message
+
+      // Setting error messages identified by Yup
+      if (error instanceof Yup.ValidationError) {
+        // Extracting Yup specific validation errors from list of total errors
+        const yupErrors = {};
+        error.inner.forEach(innerError => {
+          yupErrors[innerError.path] = innerError.message;
+        });
+
+        // Saving extracted errors
+        setErrors(yupErrors);
+      }
+    }
+  };
   const config = {
     headers: {
       Authorization: `Bearer ${userInfo.accessToken}`,
@@ -112,50 +181,71 @@ const AddBlog = item => {
     },
   };
 
-  const submitPost = (title, description, content) => {
-    console.log('submit button called');
-    console.log(REST_API_BASE_URL);
+  const getCategoryById = async () => {
+    const url = `${REST_API_BASE_URL}/categories/${post.categoryId}`;
 
-    const formData = new FormData();
-    const image = imageDetail;
-
-    formData.append('file', {
-      uri: image.assets?.[0]?.uri,
-      type: image.assets?.[0]?.type,
-      name: image.assets?.[0]?.fileName,
-      fileName: image.assets?.[0]?.fileName,
-    });
-
-    const postDto = JSON.stringify({
-      title: title,
-      description: description,
-      content: content,
-      categoryId: categoryId,
-    });
-
-    formData.append('postDto', postDto);
-
-    axios
-      .post(`${REST_API_BASE_URL}/posts`, formData, config)
-      .then(res => {
-        console.log(res);
-        Refresh();
-        ClearDataFromUI();
-        navigation.navigate('Home');
-      })
-      .catch(e => {
-        console.log(`error------------> ${e}`);
-
-        // console.log(e.response.status);
-        // if (e.response.status === 404) {
-        //   pageNotFoundError();
-        // }
-
-        // if (e.response.status === 401) {
-        //   tockenExpire();
-        // }
-      });
+    const options = {
+      method: 'GET',
+    };
+    const res = await fetch(url, options);
+    // console.log(res);
+    if (!res.ok) {
+      setCategory(null);
+      throw new Error(`Faild to fetch Post by ID = ${post.categoryId}`);
+    }
+    const json = await res.json();
+    setCategory(json);
   };
+
+  // const submitPost = () => {
+  //   console.log('title : ' + title);
+  //   console.log('descriptiton : ' + description);
+  //   console.log('content : ' + content);
+  //   console.log('categoryId : ' + categoryId);
+
+  //   console.log('submit button called');
+  //   console.log(REST_API_BASE_URL);
+
+  //   const formData = new FormData();
+  //   const image = imageDetail;
+
+  //   formData.append('file', {
+  //     uri: image.assets?.[0]?.uri,
+  //     type: image.assets?.[0]?.type,
+  //     name: image.assets?.[0]?.fileName,
+  //     fileName: image.assets?.[0]?.fileName,
+  //   });
+
+  //   const postDto = JSON.stringify({
+  //     title: title,
+  //     description: description,
+  //     content: content,
+  //     categoryId: categoryId,
+  //   });
+
+  //   formData.append('postDto', postDto);
+
+  //   axios
+  //     .post(`${REST_API_BASE_URL}/posts`, formData, config)
+  //     .then(res => {
+  //       console.log(res);
+  //       Refresh();
+  //       ClearDataFromUI();
+  //       navigation.navigate('Home');
+  //     })
+  //     .catch(e => {
+  //       console.log(`error------------> ${e}`);
+
+  //       console.log(e.response.status);
+  //       if (e.response.status === 404) {
+  //         pageNotFoundError();
+  //       }
+
+  //       if (e.response.status === 401) {
+  //         tockenExpire();
+  //       }
+  //     });
+  // };
   const updatePost = (title, description, content) => {
     console.log('Update method called');
     const ID = post.id;
@@ -243,256 +333,730 @@ const AddBlog = item => {
       ],
     );
   };
+
+  useEffect(() => {
+    if (post != null) {
+      console.log(' update post useEffect called');
+      console.log(post);
+      setPostId(post.id);
+      setTitle(post.title);
+      setDescription(post.description);
+      setContent(post.content);
+      setCategoryId(post.categoryId);
+      setForUpdate(true);
+      getCategoryById();
+      if (post.image != null) {
+        const imgeUrl = `${REST_API_BASE_URL}/image/${post.image}`;
+        setImageDetails(imgeUrl);
+        setImage(imgeUrl);
+      }
+    }
+  }, []);
   return (
-    <ScrollView
-      style={{
-        flex: 1,
-        padding: moderateScale(20),
-      }}>
-      {/* // Handleing Image related thing below */}
-      <View
-        style={
-          {
-            // borderWidth: 1,
-          }
-        }>
-        {image === null ? (
-          // ADD Image button
-          <TouchableOpacity
-            onPress={openImagePicker}
-            style={{
-              borderWidth: 1,
-              padding: moderateScale(5),
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: moderateScale(5),
-              marginBottom: moderateScale(10),
-            }}>
-            <Text>Add Image </Text>
-          </TouchableOpacity>
-        ) : (
+    <>
+      <Animated.View
+        style={{
+          transform: [{translateY: translateY}],
+          height: verticalScale(50),
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          left: 0,
+          zIndex: 1,
+          // borderWidth: 1,
+        }}>
+        {/* Header */}
+        <View
+          style={{
+            borderBottomWidth: 0.2,
+            flexDirection: 'row',
+            elevation: 1,
+            height: verticalScale(50),
+            width: '100%',
+            paddingLeft: moderateScale(8),
+            backgroundColor: 'white',
+          }}>
+          <View style={styles.headTitleContainer}>
+            {post ? (
+              <Pressable
+                onPress={() => {
+                  navigation.goBack();
+                }}
+                style={{
+                  // borderWidth: 1,
+                  alignSelf: 'flex-start',
+                  flexDirection: 'row',
+                  columnGap: moderateScale(10),
+                  alignItems: 'center',
+                }}>
+                <FeatherIcons
+                  name={'arrow-left'}
+                  size={moderateScale(22)}
+                  color="black"
+                />
+                <Text style={styles.headTitleText}>Back</Text>
+              </Pressable>
+            ) : (
+              <View>
+                <Text style={styles.headTitleText}>AddBlog</Text>
+              </View>
+            )}
+          </View>
+
+          {/* Template Button and Post or Update button */}
+
           <View
             style={{
               // borderWidth: 1,
-              justifyContent: 'center',
+              flex: 1,
+              flexDirection: 'row',
+              justifyContent: 'space-between',
               alignItems: 'center',
+              paddingRight: moderateScale(8),
             }}>
-            <Image
-              source={{uri: image}}
-              style={{
-                width: '100%',
-                height: 200,
-                borderRadius: moderateScale(5),
-                marginBottom: moderateScale(10),
-                // resizeMode: 'contain',
+            {/* Template Button */}
+            <TouchableOpacity
+              onPress={() => {
+                navigation.navigate('TemplateForMarkdown');
               }}
-            />
-            <View
               style={{
                 // borderWidth: 1,
-                alignItems: 'center',
-                justifyContent: 'space-evenly',
-                marginBottom: moderateScale(10),
-                flexDirection: 'row',
-                width: '100%',
+                borderRadius: moderateScale(5),
+                paddingVertical: moderateScale(4),
+                paddingHorizontal: moderateScale(8),
+                backgroundColor: 'lightgreen',
+              }}>
+              <Text
+                style={{
+                  color: 'black',
+                  fontWeight: 'bold',
+                }}>
+                Template
+              </Text>
+            </TouchableOpacity>
+
+            {/* Done button */}
+            <TouchableOpacity
+              onPress={nextPage}
+              style={{
+                // borderWidth: 1,
+                borderRadius: moderateScale(5),
+                paddingVertical: moderateScale(4),
+                paddingHorizontal: moderateScale(8),
+                backgroundColor: 'black',
+              }}>
+              <Text
+                style={{
+                  color: 'white',
+                  fontWeight: 'bold',
+                }}>
+                Preview
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Animated.View>
+
+      {/* ADD or Update blog container */}
+      <View
+        style={{
+          flex: 1,
+          padding: moderateScale(20),
+        }}>
+        {/* Show Category Menu container */}
+        {showCategoryMenu && (
+          <View
+            style={{
+              marginTop: moderateScale(130),
+              height: '80%',
+              borderRadius: 10,
+              width: '100%',
+              // borderWidth: 1,
+              elevation: 10,
+              position: 'absolute',
+              right: 'auto',
+              left: 'auto',
+              alignSelf: 'center',
+              zIndex: 1,
+              backgroundColor: 'white',
+              // alignSelf: 'center',
+            }}>
+            {/* Close Button */}
+            <View
+              style={{
+                // backgroundColor: 'blue',
+                height: moderateScale(40),
+                alignItems: 'flex-end',
+                // borderWidth: 1,
               }}>
               <TouchableOpacity
-                onPress={openImagePicker}
-                style={{
-                  borderWidth: 1,
-                  padding: moderateScale(5),
-                  borderRadius: moderateScale(5),
-                }}>
-                <Text
-                  style={{
-                    color: 'black',
-                    fontWeight: '500',
-                  }}>
-                  Update
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
                 onPress={() => {
-                  Alert.alert(
-                    'Remove Image',
-                    'Are you sure you want to remove this image ??',
-                    [
-                      {
-                        text: 'Cancel',
-                        style: 'cancel',
-                      },
-                      {
-                        text: 'OK',
-                        onPress: () => {
-                          setImage(null);
-                          setImageDetails(null);
-                        },
-                      },
-                    ],
-                  );
+                  setShowCategoryMenu(false);
                 }}
                 style={{
-                  borderWidth: 1,
-                  padding: moderateScale(5),
-                  borderRadius: moderateScale(5),
-                  backgroundColor: 'black',
+                  // borderWidth: 1,
+                  height: moderateScale(40),
+                  width: moderateScale(40),
+                  borderRadius: moderateScale(20),
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}>
+                <AntDesign
+                  name={'close'}
+                  size={moderateScale(25)}
+                  color="gray"
+                />
+              </TouchableOpacity>
+            </View>
+
+            {/* Add Category Button */}
+            <Pressable
+              onPress={() => navigation.navigate('AddCategory')}
+              style={{
+                borderWidth: 0.5,
+                borderColor: 'green',
+                borderRadius: moderateScale(10),
+                height: moderateScale(35),
+                flexDirection: 'row',
+                alignItems: 'center',
+                alignSelf: 'flex-start',
+                gap: moderateScale(10),
+                paddingHorizontal: moderateScale(10),
+                marginHorizontal: moderateScale(10),
+              }}>
+              <Ionicons
+                name={'add-circle-outline'}
+                size={moderateScale(25)}
+                // color="black"
+              />
+
+              <Text
+                style={{
+                  fontSize: moderateScale(15),
+                  fontWeight: 'bold',
+                  // color: 'black',
+                }}>
+                ADD New Category
+              </Text>
+            </Pressable>
+
+            {/* Select Category Option */}
+            <View
+              style={{
+                width: '100%',
+                height: '70%',
+              }}>
+              <View
+                style={{
+                  padding: moderateScale(10),
+                  // borderWidth: 1,
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
                 }}>
                 <Text
                   style={{
-                    color: 'white',
-                    fontWeight: '500',
+                    fontSize: moderateScale(20),
+                    fontWeight: 'bold',
                   }}>
-                  Remove
+                  Select Category
                 </Text>
-              </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => {
+                    setEditCategory(!editCategory);
+                    setCategory(null);
+                    setCategoryId();
+                  }}
+                  style={{
+                    borderWidth: 1,
+                    borderColor: 'gray',
+                    padding: moderateScale(5),
+                    paddingHorizontal: moderateScale(10),
+                    borderRadius: moderateScale(10),
+                    backgroundColor: editCategory ? 'lightgreen' : null,
+                  }}>
+                  <Text style={styles.commontSmallText}>Edit</Text>
+                </TouchableOpacity>
+              </View>
+
+              <FlatList
+                verticalScale={true}
+                numColumns={3}
+                alignSelf={'center'}
+                data={categories}
+                keyExtractor={item => item.id.toString()}
+                renderItem={({item}) =>
+                  item.id === 1 ? null : (
+                    <TouchableOpacity
+                      onPress={() => {
+                        if (editCategory) {
+                          navigation.navigate('AddCategory', item);
+                        } else {
+                          id = item.id;
+                          setCategoryId(id);
+                          setCategory(item);
+                          console.log('name : ' + item.name);
+                          setShowCategoryMenu(false);
+                        }
+                      }}
+                      style={{
+                        borderWidth: 0.8,
+                        borderColor: 'black',
+                        paddingVertical: moderateScale(6),
+                        paddingHorizontal: moderateScale(15),
+                        margin: moderateScale(4),
+                        marginTop: moderateScale(9),
+                        borderRadius: moderateScale(10),
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        backgroundColor:
+                          categoryId === item.id ? 'black' : 'white',
+                      }}>
+                      {editCategory && (
+                        <View
+                          style={{
+                            borderWidth: 1,
+                            borderColor: 'green',
+                            backgroundColor: 'green',
+                            height: moderateScale(10),
+                            width: moderateScale(10),
+                            borderRadius: moderateScale(5),
+                            position: 'absolute',
+                            right: 2,
+                            top: 2,
+                          }}
+                        />
+                      )}
+                      <Text
+                        style={{
+                          fontWeight: '600',
+                          color: categoryId === item.id ? 'white' : 'black',
+                        }}>
+                        {item.name}
+                      </Text>
+                    </TouchableOpacity>
+                  )
+                }
+              />
             </View>
           </View>
         )}
-      </View>
-      <Formik
-        validationSchema={userSchema}
-        style={styles.wrapper}
-        initialValues={
-          post
-            ? {
-                title: post.title,
-                description: post.description,
-                content: post.content,
-                categoryId: post.categoryId,
-              }
-            : {
-                title: '',
-                description: '',
-                content: '',
-              }
-        }
-        onSubmit={(values, {resetForm}) => {
-          post
-            ? updatePost(values.title, values.description, values.content)
-            : submitPost(values.title, values.description, values.content);
-          resetForm({values: ''});
-        }}>
-        {({handleChange, handleSubmit, values, errors}) => (
+        {/* // If Edit tab is selected then show this */}
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          onScroll={e => {
+            scrollY.setValue(e.nativeEvent.contentOffset.y);
+          }}>
+          {/* Below View is for adjusting with the heading height when scrolling  */}
+          <View style={{height: moderateScale(50)}} />
+
           <View>
-            <Text style={styles.titleText}>Title : </Text>
-            <TextInput
-              style={styles.titleText}
-              value={values.title}
-              onChangeText={handleChange('title')}
-              multiline
-              placeholder="Enter title here..."
-            />
-            {errors.title && (
-              <Text
-                style={{
-                  color: 'red',
-                  marginBottom: moderateScale(20),
-                  marginTop: moderateScale(-10),
-                }}>
-                {errors.title}
-              </Text>
-            )}
-
-            {/* Description */}
-            <Text style={styles.descriptionText}>Description : </Text>
-            <TextInput
-              style={styles.descriptionText}
-              value={values.description}
-              onChangeText={handleChange('description')}
-              // onBlur={handleBlur('title')}
-              multiline
-              placeholder="Enter description here..."
-            />
-            {errors.description && (
-              <Text
-                style={{
-                  color: 'red',
-                  marginBottom: moderateScale(20),
-                  marginTop: moderateScale(-10),
-                }}>
-                {errors.description}
-              </Text>
-            )}
-
-            {/* Content */}
-            <Text style={styles.contentText}>Content : </Text>
-            <TextInput
-              style={styles.contentText}
-              value={values.content}
-              onChangeText={handleChange('content')}
-              // onBlur={handleBlur('title')}
-              multiline
-              placeholder="Enter content here..."
-            />
-            {errors.content && (
-              <Text
-                style={{
-                  color: 'red',
-                  marginBottom: moderateScale(20),
-                  marginTop: moderateScale(-10),
-                }}>
-                {errors.content}
-              </Text>
-            )}
-
-            {/* SELECT CATEGORY */}
-            <View
-              style={{
-                borderWidth: 1,
-                padding: moderateScale(10),
-                borderRadius: moderateScale(10),
-                height: moderateScale(100),
-              }}>
-              <FlatList
-                horizontal={true}
-                data={categories}
-                keyExtractor={item => item.id.toString()}
-                renderItem={({item}) => (
-                  <TouchableOpacity
-                    onPress={() => {
-                      id = item.id;
-                      setCategoryId(id);
+            {/* // Handleing Image related thing below */}
+            <View>
+              {image == null ? (
+                // ADD Image button
+                <TouchableOpacity
+                  onPress={openImagePicker}
+                  style={{
+                    borderWidth: 1,
+                    height: moderateScale(40),
+                    padding: moderateScale(5),
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: moderateScale(5),
+                    marginBottom: moderateScale(10),
+                  }}>
+                  <Text
+                    style={{
+                      fontSize: moderateScale(20),
+                      fontWeight: 'bold',
+                    }}>
+                    Add Image{' '}
+                  </Text>
+                </TouchableOpacity>
+              ) : (
+                <View
+                  style={{
+                    // borderWidth: 1,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}>
+                  <Image
+                    source={{uri: image}}
+                    style={{
+                      width: '100%',
+                      height: 200,
+                      borderRadius: moderateScale(5),
+                      marginBottom: moderateScale(10),
+                      // resizeMode: 'contain',
                     }}
+                  />
+                  <View
+                    style={{
+                      // borderWidth: 1,
+                      alignItems: 'center',
+                      justifyContent: 'space-evenly',
+                      marginBottom: moderateScale(10),
+                      flexDirection: 'row',
+                      width: '100%',
+                    }}>
+                    <TouchableOpacity
+                      onPress={openImagePicker}
+                      style={{
+                        borderWidth: 1,
+                        padding: moderateScale(5),
+                        borderRadius: moderateScale(5),
+                      }}>
+                      <Text
+                        style={{
+                          color: 'black',
+                          fontWeight: '500',
+                        }}>
+                        Update
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => {
+                        Alert.alert(
+                          'Remove Image',
+                          'Are you sure you want to remove this image ??',
+                          [
+                            {
+                              text: 'Cancel',
+                              style: 'cancel',
+                            },
+                            {
+                              text: 'OK',
+                              onPress: () => {
+                                setImage(null);
+                                setImageDetails(null);
+                              },
+                            },
+                          ],
+                        );
+                      }}
+                      style={{
+                        borderWidth: 1,
+                        padding: moderateScale(5),
+                        borderRadius: moderateScale(5),
+                        backgroundColor: 'black',
+                      }}>
+                      <Text
+                        style={{
+                          color: 'white',
+                          fontWeight: '500',
+                        }}>
+                        Remove
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+            </View>
+
+            {/* Create or Select category  */}
+            <Pressable
+              onPress={() => setShowCategoryMenu(true)}
+              style={{
+                width: '100%',
+                height: moderateScale(35),
+                borderWidth: 1,
+                borderColor: errors.categoryId ? 'red' : 'black',
+                borderRadius: moderateScale(5),
+                alignItems: 'center',
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                paddingHorizontal: moderateScale(10),
+                marginBottom: moderateScale(10),
+              }}>
+              {category === null ? (
+                <Text># Select category</Text>
+              ) : (
+                <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                  <Text># Selected category is : </Text>
+                  <View
                     style={{
                       borderWidth: 0.8,
                       borderColor: 'black',
-                      paddingVertical: moderateScale(6),
-                      paddingHorizontal: moderateScale(15),
-                      margin: moderateScale(4),
-                      marginTop: moderateScale(9),
+                      paddingVertical: moderateScale(4),
+                      paddingHorizontal: moderateScale(10),
                       borderRadius: moderateScale(10),
                       justifyContent: 'center',
                       alignItems: 'center',
-                      backgroundColor:
-                        categoryId === item.id ? 'black' : 'white',
+                      backgroundColor: 'black',
                     }}>
                     <Text
                       style={{
                         fontWeight: '600',
-                        color: categoryId === item.id ? 'white' : 'black',
+                        color: 'white',
                       }}>
-                      {item.name}
+                      {category.name}
                     </Text>
-                  </TouchableOpacity>
-                )}
+                  </View>
+                </View>
+              )}
+              <View
+                style={{
+                  // borderWidth: 1,
+                  height: moderateScale(30),
+                  width: moderateScale(30),
+                  borderRadius: moderateScale(15),
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  // backgroundColor: 'white',
+                }}>
+                <MaterialCommunityIcons
+                  name={'menu-down'}
+                  size={moderateScale(29)}
+                  color="black"
+                />
+              </View>
+            </Pressable>
+            {errors.categoryId && (
+              <Text style={styles.errorText}>{errors.categoryId}</Text>
+            )}
+            <View>
+              <View style={styles.CommonClearContainer}>
+                <Text style={styles.titleText}>Title : </Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    Alert.alert(
+                      'Clear Title',
+                      'Are you sure you want to Clear Title data',
+                      [
+                        {
+                          text: 'Cancel',
+                          style: 'cancel',
+                        },
+                        {
+                          text: 'OK',
+                          onPress: () => {
+                            setTitle('');
+                          },
+                        },
+                      ],
+                    );
+                  }}
+                  style={styles.CommonClearButton}>
+                  <Text>Clear</Text>
+                </TouchableOpacity>
+              </View>
+              <TextInput
+                style={styles.titleText}
+                value={title}
+                onChangeText={setTitle}
+                multiline
+                placeholder="Enter title here..."
               />
+              {errors.title && (
+                <Text style={styles.errorText}>{errors.title}</Text>
+              )}
+
+              {/* Description */}
+              <View style={styles.CommonClearContainer}>
+                <Text style={styles.descriptionText}>Description : </Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    Alert.alert(
+                      'Clear Description',
+                      'Are you sure you want to Clear Description',
+                      [
+                        {
+                          text: 'Cancel',
+                          style: 'cancel',
+                        },
+                        {
+                          text: 'OK',
+                          onPress: () => {
+                            setDescription('');
+                          },
+                        },
+                      ],
+                    );
+                  }}
+                  style={styles.CommonClearButton}>
+                  <Text>Clear</Text>
+                </TouchableOpacity>
+              </View>
+              <TextInput
+                style={styles.descriptionText}
+                value={description}
+                onChangeText={setDescription}
+                // onBlur={handleBlur('title')}
+                multiline
+                placeholder="Enter description here..."
+              />
+              {errors.description && (
+                <Text style={styles.errorText}>{errors.description}</Text>
+              )}
+
+              {/* Content */}
+              <View
+                style={{
+                  borderWidth: 1,
+                  borderRadius: moderateScale(10),
+                  padding: moderateScale(5),
+                  minHeight: moderateScale(500),
+                }}>
+                <View style={styles.CommonClearContainer}>
+                  <Text style={styles.contentText}>Content : </Text>
+                  <TouchableOpacity
+                    onPress={() => {
+                      Alert.alert(
+                        'Clear Content',
+                        'Are you sure you want to Clear all the data in the Content',
+                        [
+                          {
+                            text: 'Cancel',
+                            style: 'cancel',
+                          },
+                          {
+                            text: 'OK',
+                            onPress: () => {
+                              setContent('');
+                            },
+                          },
+                        ],
+                      );
+                    }}
+                    style={styles.CommonClearButton}>
+                    <Text>Clear</Text>
+                  </TouchableOpacity>
+                </View>
+                <TextInput
+                  style={styles.contentText}
+                  value={content}
+                  onChangeText={setContent}
+                  // onBlur={handleBlur('title')}
+                  multiline
+                  placeholder="Enter content here..."
+                />
+                {errors.content && (
+                  <Text style={styles.errorText}>{errors.content}</Text>
+                )}
+              </View>
+
+              {/* Submit Post Button and Errors */}
+              {/* {done && (
+                <View
+                  style={{
+                    flex: 1,
+                    height: '100%',
+                    position: 'absolute',
+                    width: '100%',
+                    // justifyContent: 'center',
+                    alignItems: 'center',
+                    // borderWidth: 1,
+                    borderRadius: moderateScale(10),
+                    zIndex: 1,
+                    // opacity: 0.5,
+                    backgroundColor: 'rgba(235, 232, 232, 0.8)',
+                  }}>
+                  <Button
+                    onPress={handleSubmit}
+                    title={post ? 'Update' : 'Post'}
+                  />
+                  {(errors.content || errors.title || errors.description) && (
+                    <Text
+                      style={[styles.errorText, {fontSize: moderateScale(17)}]}>
+                      Resolve the below Errors First
+                    </Text>
+                  )}
+
+                  {errors.title && (
+                    <Text style={styles.errorText}>{errors.title}</Text>
+                  )}
+                  {errors.description && (
+                    <Text style={styles.errorText}>{errors.description}</Text>
+                  )}
+
+                  {errors.content && (
+                    <Text style={styles.errorText}>{errors.content}</Text>
+                  )}
+                </View>
+              )} */}
             </View>
-            <Button onPress={handleSubmit} title={post ? 'Update' : 'Post'} />
           </View>
-        )}
-      </Formik>
-    </ScrollView>
+        </ScrollView>
+      </View>
+    </>
   );
 };
 
 export default AddBlog;
 
 const styles = StyleSheet.create({
+  headTitleContainer: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  headTitleText: {
+    fontWeight: '600',
+    fontSize: moderateScale(20),
+    color: 'black',
+  },
+  errorText: {
+    color: 'red',
+    marginBottom: moderateScale(20),
+    marginTop: moderateScale(-10),
+  },
   titleText: {
     // borderWidth: 0.5,
     fontSize: moderateScale(20),
     fontWeight: '700',
   },
-  descriptionText: {},
-  contentText: {},
+  descriptionText: {
+    fontSize: moderateScale(15),
+    fontWeight: '500',
+  },
+  contentText: {
+    fontSize: moderateScale(15),
+  },
+
+  tabsContainer: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 10,
+    padding: moderateScale(10),
+    backgroundColor: 'white',
+    elevation: 1,
+  },
+  tab: {
+    flex: 1,
+    padding: 10,
+    borderColor: 'gray',
+    borderWidth: 0.5,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  tabText: {
+    fontFamily: 'InterBold',
+    fontWeight: 'bold',
+  },
+  commontSmallText: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: 'black',
+  },
+  commontMediumText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: 'black',
+  },
+  commontLargeText: {
+    fontSize: 30,
+    fontWeight: 'bold',
+    color: 'black',
+  },
+  CommonClearContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  CommonClearButton: {
+    borderWidth: 1,
+    padding: moderateScale(3),
+    borderRadius: moderateScale(3),
+  },
 });

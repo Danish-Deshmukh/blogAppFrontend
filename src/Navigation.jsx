@@ -18,10 +18,13 @@ import OcticonsIcon from 'react-native-vector-icons/Octicons';
 import FeatherIcons from 'react-native-vector-icons/Feather';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import CommentsCard from './screens/CommentsCard';
-import TestHome from './screens/TestHome';
 import ShowPostComments from './screens/ShowPostComments';
 import CheatSheet from './forDelete/CheatSheet';
 import AddUrlScreen from './screens/AddUrlScreen';
+import ForTesting from './forDelete/ForTesting';
+import AddCategory from './screens/AddCategory';
+import PreviewScreen from './screens/PreviewScreen';
+import TemplateForMarkdown from './screens/TemplateForMarkdown';
 
 const NativeSTACK = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -52,23 +55,6 @@ export function BottomTab() {
         }}
       />
 
-      {/* THIS WAS TEST HOME */}
-      {/* <Tab.Screen
-        name="TestHome"
-        component={TestHome}
-        options={{
-          headerShown: false,
-          headerTitle: 'Blog App',
-          tabBarLabel: () => {},
-          tabBarIcon: ({focused}) => (
-            <OcticonsIcon
-              name={'alert'}
-              size={moderateScale(28)}
-              color={focused ? 'black' : 'gray'}
-            />
-          ),
-        }}
-      /> */}
       {splashLoading ? (
         <Tab.Screen
           name="Splash Screen"
@@ -82,7 +68,7 @@ export function BottomTab() {
               name="AddBlog"
               component={AddBlog}
               options={{
-                headerShown: true,
+                headerShown: false,
                 tabBarLabel: () => {},
                 tabBarIcon: ({focused}) => (
                   <Ionicons
@@ -163,6 +149,23 @@ export default function Navigation() {
           }}
         />
         <NativeSTACK.Screen
+          name="ForTesting"
+          component={ForTesting}
+          options={{
+            headerShown: true,
+            animation: 'slide_from_right',
+          }}
+        />
+        <NativeSTACK.Screen
+          name="TemplateForMarkdown"
+          component={TemplateForMarkdown}
+          options={{
+            headerShown: true,
+            headerTitle: 'Template For Markdown',
+            animation: 'slide_from_right',
+          }}
+        />
+        <NativeSTACK.Screen
           name="PostDetailScreen"
           component={PostDetailScreen}
           options={{
@@ -191,8 +194,26 @@ export default function Navigation() {
           name="AddBlog"
           component={AddBlog}
           options={{
+            headerShown: false,
+            headerTitle: 'Back',
+          }}
+        />
+        <NativeSTACK.Screen
+          name="AddCategory"
+          component={AddCategory}
+          options={{
             headerShown: true,
             headerTitle: 'Back',
+            animation: 'slide_from_right'
+          }}
+        />
+        <NativeSTACK.Screen
+          name="PreviewScreen"
+          component={PreviewScreen}
+          options={{
+            headerShown: true,
+            headerTitle: 'Preview of the Post',
+            animation: 'slide_from_right'
           }}
         />
         <NativeSTACK.Screen
@@ -201,7 +222,7 @@ export default function Navigation() {
           options={{
             headerShown: false,
             headerTitle: 'Back',
-            animation: 'slide_from_bottom'
+            animation: 'slide_from_bottom',
           }}
         />
         <NativeSTACK.Screen
@@ -210,7 +231,7 @@ export default function Navigation() {
           options={{
             headerShown: true,
             headerTitle: 'Back',
-            animation: 'slide_from_bottom'
+            animation: 'slide_from_bottom',
           }}
         />
         {splashLoading ? (

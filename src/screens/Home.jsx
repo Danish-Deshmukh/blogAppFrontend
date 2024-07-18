@@ -1,5 +1,6 @@
 import {
   Alert,
+  Animated,
   BackHandler,
   FlatList,
   StyleSheet,
@@ -22,8 +23,9 @@ import {
 } from '@tanstack/react-query';
 import {ActivityIndicator} from 'react-native-paper';
 import Card from '../components/Card';
-import {moderateScale} from 'react-native-size-matters';
+import {moderateScale, verticalScale} from 'react-native-size-matters';
 import FoundationIcon from 'react-native-vector-icons/Foundation';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import {
   useFocusEffect,
   useNavigation,
@@ -34,6 +36,14 @@ import {AuthContext} from '../context/AuthContext';
 export default function Home() {
   const {REST_API_BASE_URL} = useContext(AuthContext);
   const navigation = useNavigation();
+
+  const scrollConst = moderateScale(100);
+  const scrollY = new Animated.Value(0);
+  const diffclamp = Animated.diffClamp(scrollY, 0, scrollConst);
+  const translateY = diffclamp.interpolate({
+    inputRange: [0, scrollConst],
+    outputRange: [0, -scrollConst],
+  });
 
   // Below ref is for When click on Home button then it will take you to top of the scrollable screen
   const ref = useRef(null);
@@ -69,7 +79,6 @@ export default function Home() {
 
   // QUERY FOR FETCHING POSTS
   const fetchAllPosts = async pageParam => {
-
     console.log('get all posts method is called ');
     console.log(REST_API_BASE_URL);
 
@@ -91,25 +100,30 @@ export default function Home() {
     return json.content;
   };
 
-  const {data, isLoading, error, fetchNextPage, isFetchingNextPage} =
-    useInfiniteQuery({
-      queryKey: ['posts'],
-      queryFn: fetchAllPosts,
-      initialPageParam: 0,
-      getNextPageParam: (lastPage, pages) => pages.length,
-    });
+  const {
+    data,
+    isLoading: postLoading,
+    error,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ['posts'],
+    queryFn: fetchAllPosts,
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, pages) => pages.length,
+  });
   const posts = data?.pages.flat();
 
   // QUERY AND STATES FOR FETCHING CATEGORIES
   const fetchAllCategories = async () => {
     const url = `${REST_API_BASE_URL}/categories`;
-  
+
     const options = {
       method: 'GET',
     };
-  
+
     const res = await fetch(url, options);
-  
+
     if (!res.ok) {
       throw new Error('Faild to fetch Categories');
     }
@@ -122,20 +136,20 @@ export default function Home() {
     error: categoriesError,
     isLoading: categoriesIsLoading,
   } = useQuery({
-    queryKey: ['categories'],
+    queryKey: ['homeCategories'],
     queryFn: fetchAllCategories,
   });
 
   // QUERY FOR FETCHING POSTS BY CATEGORY
   const fetchPostsByCategory = async id => {
     const url = `${REST_API_BASE_URL}/categories/category/${id}`;
-  
+
     const options = {
       method: 'GET',
     };
-  
+
     const res = await fetch(url, options);
-  
+
     if (!res.ok) {
       throw new Error('Faild to fetch Posts by this category');
     }
@@ -150,6 +164,7 @@ export default function Home() {
   const Refresh = () => {
     client.invalidateQueries(['posts']);
     client.invalidateQueries(['postByCategory']);
+    // client.clear();
   };
   useEffect(() => {
     client.invalidateQueries(['postByCategory']);
@@ -157,175 +172,287 @@ export default function Home() {
 
   return (
     <View style={styles.container}>
-      {/* HEADER */}
-      <View style={styles.headerContainer}>
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            // borderWidth: 1,
-            width: moderateScale(90),
-            justifyContent: 'space-between',
-          }}>
-          <Text
-            style={{
-              fontWeight: '600',
-              fontSize: moderateScale(20),
-              color: 'black',
-            }}>
-            Blog App
-          </Text>
-        </View>
-
-        <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            // borderWidth: 1,
-            width: '40%',
-          }}>
-          {/* ADD URL Button here */}
-          <TouchableOpacity
-            onPress={() => navigation.navigate('AddUrlScreen')}
-            style={{
-              borderWidth: 1,
-              width: '40%',
-              justifyContent: 'center',
-              alignItems: 'center',
-              borderRadius: moderateScale(10),
-            }}>
-            <Text>Add url</Text>
-          </TouchableOpacity>
-
-          {/* REFRESH BUTTON */}
-          <TouchableOpacity
-            onPress={() => {
-              Refresh();
-              console.log('refresh called');
-            }}
-            style={{
-              marginRight: moderateScale(10),
-            }}>
-            <FoundationIcon
-              name={'refresh'}
-              size={moderateScale(30)}
-              color="black"
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* CATEGORYS */}
-      <View
+      <Animated.View
         style={{
-          minHeight: moderateScale(40),
-          width: '100%',
-          // borderWidth: 1,
+          transform: [{translateY: translateY}],
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          left: 0,
+          elevation: 4,
+          zIndex: 1,
         }}>
-        {categoriesIsLoading && (
-          <ActivityIndicator
-            color={'black'}
+        {/* HEADER */}
+        <View style={styles.headerContainer}>
+          <View
             style={{
-              position: 'absolute',
-              zIndex: 1,
-              alignSelf: 'center',
-            }}
-          />
-        )}
-        {categoriesError ? (
-          <View>
-            <Text style={styles.ErrorMessageText}>
-              {categoriesError.message}
+              flexDirection: 'row',
+              alignItems: 'center',
+              // borderWidth: 1,
+              width: moderateScale(90),
+              justifyContent: 'space-between',
+            }}>
+            <Text
+              style={{
+                fontWeight: '600',
+                fontSize: moderateScale(20),
+                color: 'black',
+              }}>
+              Blog App
             </Text>
           </View>
-        ) : (
-          <FlatList
-            horizontal={true}
-            showsHorizontalScrollIndicator={false}
-            data={categories}
-            ListFooterComponent={() => (
-              <TouchableOpacity
-                onPress={() => {
-                  Alert.alert(
-                    'Under Construction',
-                    'This Feature is under construnction',
-                    [
-                      {
-                        text: 'OK',
-                      },
-                    ],
-                  );
-                }}
-                style={{
-                  borderWidth: 0.8,
-                  borderColor: 'black',
-                  paddingVertical: moderateScale(6),
-                  paddingHorizontal: moderateScale(15),
-                  margin: moderateScale(4),
-                  marginTop: moderateScale(9),
-                  borderRadius: moderateScale(10),
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  backgroundColor: 'white',
-                }}>
-                <Text
-                  style={{
-                    fontWeight: '600',
-                    color: 'black',
-                  }}>
-                  more...
-                </Text>
-              </TouchableOpacity>
-            )}
-            keyExtractor={item => item.id.toString()}
-            renderItem={({item}) => (
-              <TouchableOpacity
-                onPress={() => {
-                  id = item.id;
-                  setSelectedCategories(id);
-                }}
-                style={{
-                  borderWidth: 0.8,
-                  borderColor: 'black',
-                  paddingVertical: moderateScale(6),
-                  paddingHorizontal: moderateScale(15),
-                  margin: moderateScale(4),
-                  marginTop: moderateScale(9),
-                  borderRadius: moderateScale(10),
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  backgroundColor:
-                    selectedCategories === item.id ? 'black' : 'white',
-                }}>
-                <Text
-                  style={{
-                    fontWeight: '600',
-                    color: selectedCategories === item.id ? 'white' : 'black',
-                  }}>
-                  {item.name}
-                </Text>
-              </TouchableOpacity>
-            )}
-          />
-        )}
-      </View>
 
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              // borderWidth: 1,
+              width: '40%',
+            }}>
+            {/* ADD URL Button here */}
+            <TouchableOpacity
+              onPress={() => navigation.navigate('AddUrlScreen')}
+              style={{
+                borderWidth: 1,
+                width: '40%',
+                justifyContent: 'center',
+                alignItems: 'center',
+                borderRadius: moderateScale(10),
+              }}>
+              <Text>Add url</Text>
+            </TouchableOpacity>
+
+            {/* REFRESH BUTTON */}
+            <TouchableOpacity
+              onPress={() => {
+                Refresh();
+                console.log('refresh called');
+              }}
+              style={{
+                marginRight: moderateScale(10),
+              }}>
+              <FoundationIcon
+                name={'refresh'}
+                size={moderateScale(30)}
+                color="black"
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* CATEGORYS */}
+        <View
+          style={{
+            minHeight: moderateScale(40),
+            width: '100%',
+            // borderWidth: 1,
+            backgroundColor: 'white',
+          }}>
+          {categoriesIsLoading && (
+            // Loading Category skeleton
+            <FlatList
+              // scrollEnabled={false}
+              horizontal={true}
+              showsHorizontalScrollIndicator={false}
+              data={[1, 1, 1, 1, 1, 1]}
+              renderItem={() => {
+                return (
+                  <View
+                    style={{
+                      height: moderateScale(30),
+                      width: moderateScale(70),
+                      borderWidth: 0.1,
+                      elevation: 1,
+                      borderColor: 'black',
+                      paddingVertical: moderateScale(6),
+                      paddingHorizontal: moderateScale(15),
+                      margin: moderateScale(4),
+                      marginTop: moderateScale(9),
+                      borderRadius: moderateScale(10),
+                    }}
+                  />
+                );
+              }}
+            />
+          )}
+          {categoriesError ? (
+            <View>
+              <Text style={styles.ErrorMessageText}>
+                {categoriesError.message}
+              </Text>
+            </View>
+          ) : (
+            <FlatList
+              horizontal={true}
+              showsHorizontalScrollIndicator={false}
+              data={categories}
+              // ListHeaderComponent={() => (
+              //   <TouchableOpacity
+              //     onPress={() => {
+              //       navigation.navigate('AddCategory');
+              //       // Alert.alert(
+              //       //   'Under Construction',
+              //       //   'This Feature is under construnction',
+              //       //   [
+              //       //     {
+              //       //       text: 'OK',
+              //       //     },
+              //       //   ],
+              //       // );
+              //     }}
+              //     style={{
+              //       borderWidth: 0.8,
+              //       borderColor: 'black',
+              //       paddingVertical: moderateScale(6),
+              //       paddingHorizontal: moderateScale(10),
+              //       margin: moderateScale(4),
+              //       marginTop: moderateScale(9),
+              //       borderRadius: moderateScale(10),
+              //       justifyContent: 'center',
+              //       alignItems: 'center',
+              //       backgroundColor: 'white',
+              //       flexDirection: 'row',
+              //     }}>
+              //     <Ionicons
+              //       name={'add'}
+              //       size={moderateScale(19)}
+              //       color="black"
+              //     />
+              //     <Text
+              //       style={{
+              //         fontWeight: '600',
+              //         color: 'black',
+              //       }}>
+              //       ADD
+              //     </Text>
+              //   </TouchableOpacity>
+              // )}
+              keyExtractor={item => item.id.toString()}
+              renderItem={({item}) => (
+                <TouchableOpacity
+                  onPress={() => {
+                    id = item.id;
+                    setSelectedCategories(id);
+                  }}
+                  style={{
+                    borderWidth: 0.8,
+                    borderColor: 'black',
+                    paddingVertical: moderateScale(6),
+                    paddingHorizontal: moderateScale(15),
+                    margin: moderateScale(4),
+                    marginTop: moderateScale(9),
+                    borderRadius: moderateScale(10),
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    backgroundColor:
+                      selectedCategories === item.id ? 'black' : 'white',
+                  }}>
+                  <Text
+                    style={{
+                      fontWeight: '600',
+                      color: selectedCategories === item.id ? 'white' : 'black',
+                    }}>
+                    {item.name}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            />
+          )}
+        </View>
+      </Animated.View>
+      {postLoading && (
+        // Skeleton Loading for Post Card
+        <View
+          style={{
+            height: '100%',
+            width: '100%',
+          }}>
+          <FlatList
+            // scrollEnabled={false}
+            data={[1, 1, 1, 1, 1]}
+            showsVerticalScrollIndicator={false}
+            ListHeaderComponent={() => (
+              // Below View is for adjusting with the heading height when scrolling
+              <View style={{height: moderateScale(100)}} />
+            )}
+            renderItem={() => {
+              return (
+                <View
+                  style={{
+                    margin: moderateScale(5),
+                    borderRadius: moderateScale(5),
+                    height: verticalScale(160),
+                    elevation: 2,
+                    flexDirection: 'row',
+                    backgroundColor: 'white',
+                  }}>
+                  <View
+                    style={{
+                      // borderWidth: 1,
+                      width: '70%',
+                      padding: moderateScale(5),
+                      paddingHorizontal: moderateScale(15),
+                      justifyContent: 'center',
+                    }}>
+                    <View
+                      style={{
+                        borderWidth: 0.1,
+                        height: 30,
+                        marginBottom: 10,
+                        elevation: 1,
+                        borderRadius: 10,
+                      }}
+                    />
+                    <View
+                      style={{
+                        borderWidth: 0.1,
+                        height: 30,
+                        marginBottom: 10,
+                        elevation: 1,
+                        borderRadius: 10,
+                      }}
+                    />
+                    <View
+                      style={{
+                        borderWidth: 0.1,
+                        height: 30,
+                        marginBottom: 10,
+                        elevation: 1,
+                        borderRadius: 10,
+                      }}
+                    />
+                  </View>
+                  <View
+                    style={{
+                      // borderWidth: 1,
+                      width: '30%',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}>
+                    <View
+                      style={{
+                        width: '90%',
+                        height: '30%',
+                        borderRadius: moderateScale(2),
+                        borderWidth: 0.1,
+                        elevation: 1,
+                      }}
+                    />
+                  </View>
+                </View>
+              );
+            }}
+          />
+        </View>
+      )}
       {/* ALLPosts */}
       <View
         style={{
-          marginBottom: moderateScale(90),
+          height: '100%',
+          width: '100%',
+          justifyContent: 'center',
+          alignItems: 'center',
         }}>
-        {isLoading && (
-          <ActivityIndicator
-            color={'black'}
-            size={'large'}
-            style={{
-              position: 'absolute',
-              alignSelf: 'center',
-              // top: 'auto',
-            }}
-          />
-        )}
         {error ? (
           <View>
             <Text style={styles.ErrorMessageText}>{error.message}</Text>
@@ -335,11 +462,19 @@ export default function Home() {
           <FlatList
             ref={ref}
             data={posts}
+            showsVerticalScrollIndicator={false}
+            onScroll={e => {
+              scrollY.setValue(e.nativeEvent.contentOffset.y);
+            }}
             renderItem={({item}) => <Card item={item} />}
             onEndReachedThreshold={0.1}
             onEndReached={() => {
               fetchNextPage();
             }}
+            ListHeaderComponent={() => (
+              // Below View is for adjusting with the heading height when scrolling
+              <View style={{height: moderateScale(100)}} />
+            )}
             ListFooterComponent={() => {
               return (
                 <View
@@ -358,6 +493,18 @@ export default function Home() {
           <FlatList
             data={postByCategory}
             renderItem={({item}) => <Card item={item} />}
+            onScroll={e => {
+              scrollY.setValue(e.nativeEvent.contentOffset.y);
+            }}
+            ListHeaderComponent={() => (
+              // Below View is for adjusting with the heading height when scrolling
+              <View
+                style={{
+                  // borderWidth: 1,
+                  height: moderateScale(100),
+                }}
+              />
+            )}
           />
         )}
       </View>
@@ -378,7 +525,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: moderateScale(10),
-    elevation: 10,
+    elevation: 1,
+    borderBottomWidth: 0.2,
   },
   ErrorMessageText: {
     color: 'red',

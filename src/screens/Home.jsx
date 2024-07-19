@@ -261,7 +261,7 @@ export default function Home() {
                     style={{
                       height: moderateScale(30),
                       width: moderateScale(70),
-                      borderWidth: 0.1,
+                      // borderWidth: 0.1,
                       elevation: 1,
                       borderColor: 'black',
                       paddingVertical: moderateScale(6),
@@ -394,33 +394,9 @@ export default function Home() {
                       paddingHorizontal: moderateScale(15),
                       justifyContent: 'center',
                     }}>
-                    <View
-                      style={{
-                        borderWidth: 0.1,
-                        height: 30,
-                        marginBottom: 10,
-                        elevation: 1,
-                        borderRadius: 10,
-                      }}
-                    />
-                    <View
-                      style={{
-                        borderWidth: 0.1,
-                        height: 30,
-                        marginBottom: 10,
-                        elevation: 1,
-                        borderRadius: 10,
-                      }}
-                    />
-                    <View
-                      style={{
-                        borderWidth: 0.1,
-                        height: 30,
-                        marginBottom: 10,
-                        elevation: 1,
-                        borderRadius: 10,
-                      }}
-                    />
+                    <View style={styles.skeletonCardTestShadow} />
+                    <View style={styles.skeletonCardTestShadow} />
+                    <View style={styles.skeletonCardTestShadow} />
                   </View>
                   <View
                     style={{
@@ -429,15 +405,7 @@ export default function Home() {
                       justifyContent: 'center',
                       alignItems: 'center',
                     }}>
-                    <View
-                      style={{
-                        width: '90%',
-                        height: '30%',
-                        borderRadius: moderateScale(2),
-                        borderWidth: 0.1,
-                        elevation: 1,
-                      }}
-                    />
+                    <View style={styles.skeletonCardImageShadow} />
                   </View>
                 </View>
               );
@@ -531,5 +499,19 @@ const styles = StyleSheet.create({
   ErrorMessageText: {
     color: 'red',
     alignSelf: 'center',
+  },
+  skeletonCardTestShadow: {
+    // borderWidth: 0.5,
+    height: 30,
+    marginBottom: 10,
+    borderRadius: 10,
+    elevation: 1,
+  },
+  skeletonCardImageShadow: {
+    width: '90%',
+    height: '30%',
+    borderRadius: moderateScale(2),
+    // borderWidth: 0.1,
+    elevation: 1,
   },
 });

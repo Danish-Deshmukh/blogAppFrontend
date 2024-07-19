@@ -1,6 +1,8 @@
-export // Create a Cloudinary instance and set your cloud name.
-const cld = new Cloudinary({
+import {Cloudinary} from '@cloudinary/url-gen';
+
+// Create a Cloudinary instance and set your cloud name.
+export const cld = new Cloudinary({
   cloud: {
-    cloudName: 'demo',
+    cloudName: 'dhpf0yarc',
   },
 });

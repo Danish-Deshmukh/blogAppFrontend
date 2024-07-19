@@ -30,7 +30,6 @@ const ForTesting = () => {
         maxHeight: 2000,
         maxWidth: 2000,
         selectionLimit: 1,
-        quality: 0.5,
       },
     };
 

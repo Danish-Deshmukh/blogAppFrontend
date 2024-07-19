@@ -18,7 +18,6 @@
     "@tanstack/react-query": "^5.45.0",
     "axios": "^1.7.2",
     "cloudinary-react-native": "^1.0.0",
-    "expo-crypto": "^13.0.2",
     "formik": "^2.4.6",
     "react": "18.2.0",
     "react-native": "0.74.1",

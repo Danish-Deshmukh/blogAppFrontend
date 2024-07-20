@@ -12,13 +12,13 @@ import {
   Pressable,
   ActivityIndicator,
 } from 'react-native';
+
 import React, {useContext, useEffect, useState} from 'react';
 import {moderateScale, verticalScale} from 'react-native-size-matters';
 import {AuthContext} from '../context/AuthContext';
 import Button from '../components/Button';
 import axios from 'axios';
 import {PreventRemoveContext, useNavigation} from '@react-navigation/native';
-import {Formik} from 'formik';
 import * as Yup from 'yup';
 import {QueryClient, useQuery, useQueryClient} from '@tanstack/react-query';
 import {launchImageLibrary} from 'react-native-image-picker';
@@ -26,13 +26,7 @@ import FeatherIcons from 'react-native-vector-icons/Feather';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import {ContinousBaseGesture} from 'react-native-gesture-handler/lib/typescript/handlers/gestures/gesture';
-import {
-  brown100,
-  deepPurpleA200,
-  deepPurpleA700,
-} from 'react-native-paper/lib/typescript/styles/themes/v2/colors';
-import {PointerType} from 'react-native-gesture-handler';
+import Modal from 'react-native-modal';
 
 const AddBlog = item => {
   const post = item.route.params;
@@ -465,182 +459,187 @@ const AddBlog = item => {
         }}>
         {/* Show Category Menu container */}
         {showCategoryMenu && (
-          <View
+          <Modal
+            isVisible={true}
+            // transparent={true}
+            visible={showCategoryMenu}
+            onBackdropPress={() => setShowCategoryMenu(false)}
             style={{
-              marginTop: moderateScale(130),
               height: '80%',
               borderRadius: 10,
               width: '100%',
-              // borderWidth: 1,
-              elevation: 10,
-              position: 'absolute',
-              right: 'auto',
-              left: 'auto',
               alignSelf: 'center',
-              zIndex: 1,
+              position: 'absolute',
+              bottom: 0,
               backgroundColor: 'white',
-              // alignSelf: 'center',
+              justifyContent: 'center',
             }}>
-            {/* Close Button */}
-            <View
-              style={{
-                // backgroundColor: 'blue',
-                height: moderateScale(40),
-                alignItems: 'flex-end',
-                // borderWidth: 1,
-              }}>
-              <TouchableOpacity
-                onPress={() => {
-                  setShowCategoryMenu(false);
-                }}
-                style={{
-                  // borderWidth: 1,
-                  height: moderateScale(40),
-                  width: moderateScale(40),
-                  borderRadius: moderateScale(20),
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                }}>
-                <AntDesign
-                  name={'close'}
-                  size={moderateScale(25)}
-                  color="gray"
-                />
-              </TouchableOpacity>
-            </View>
-
-            {/* Add Category Button */}
-            <Pressable
-              onPress={() => navigation.navigate('AddCategory')}
-              style={{
-                borderWidth: 0.5,
-                borderColor: 'green',
-                borderRadius: moderateScale(10),
-                height: moderateScale(35),
-                flexDirection: 'row',
-                alignItems: 'center',
-                alignSelf: 'flex-start',
-                gap: moderateScale(10),
-                paddingHorizontal: moderateScale(10),
-                marginHorizontal: moderateScale(10),
-              }}>
-              <Ionicons
-                name={'add-circle-outline'}
-                size={moderateScale(25)}
-                // color="black"
-              />
-
-              <Text
-                style={{
-                  fontSize: moderateScale(15),
-                  fontWeight: 'bold',
-                  // color: 'black',
-                }}>
-                ADD New Category
-              </Text>
-            </Pressable>
-
-            {/* Select Category Option */}
-            <View
-              style={{
-                width: '100%',
-                height: '70%',
-              }}>
+            <View>
+              {/* Close Button */}
               <View
                 style={{
-                  padding: moderateScale(10),
+                  // backgroundColor: 'blue',
+                  height: moderateScale(40),
+                  alignItems: 'flex-end',
                   // borderWidth: 1,
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
                 }}>
-                <Text
-                  style={{
-                    fontSize: moderateScale(20),
-                    fontWeight: 'bold',
-                  }}>
-                  Select Category
-                </Text>
-
                 <TouchableOpacity
                   onPress={() => {
-                    setEditCategory(!editCategory);
-                    setCategory(null);
-                    setCategoryId();
+                    setShowCategoryMenu(false);
                   }}
                   style={{
-                    borderWidth: 1,
-                    borderColor: 'gray',
-                    padding: moderateScale(5),
-                    paddingHorizontal: moderateScale(10),
-                    borderRadius: moderateScale(10),
-                    backgroundColor: editCategory ? 'lightgreen' : null,
+                    // borderWidth: 1,
+                    height: moderateScale(40),
+                    width: moderateScale(40),
+                    borderRadius: moderateScale(20),
+                    justifyContent: 'center',
+                    alignItems: 'center',
                   }}>
-                  <Text style={styles.commontSmallText}>Edit</Text>
+                  <AntDesign
+                    name={'close'}
+                    size={moderateScale(25)}
+                    color="gray"
+                  />
                 </TouchableOpacity>
               </View>
 
-              <FlatList
-                verticalScale={true}
-                numColumns={3}
-                alignSelf={'center'}
-                data={categories}
-                keyExtractor={item => item.id.toString()}
-                renderItem={({item}) =>
-                  item.id === 1 ? null : (
-                    <TouchableOpacity
-                      onPress={() => {
-                        if (editCategory) {
-                          navigation.navigate('AddCategory', item);
-                        } else {
-                          id = item.id;
-                          setCategoryId(id);
-                          setCategory(item);
-                          console.log('name : ' + item.name);
-                          setShowCategoryMenu(false);
-                        }
-                      }}
-                      style={{
-                        borderWidth: 0.8,
-                        borderColor: 'black',
-                        paddingVertical: moderateScale(6),
-                        paddingHorizontal: moderateScale(15),
-                        margin: moderateScale(4),
-                        marginTop: moderateScale(9),
-                        borderRadius: moderateScale(10),
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        backgroundColor:
-                          categoryId === item.id ? 'black' : 'white',
-                      }}>
-                      {editCategory && (
-                        <View
-                          style={{
-                            borderWidth: 1,
-                            borderColor: 'green',
-                            backgroundColor: 'green',
-                            height: moderateScale(10),
-                            width: moderateScale(10),
-                            borderRadius: moderateScale(5),
-                            position: 'absolute',
-                            right: 2,
-                            top: 2,
-                          }}
-                        />
-                      )}
-                      <Text
+              {/* Add Category Button */}
+              <Pressable
+                onPress={() => {
+                  setShowCategoryMenu(false);
+                  navigation.navigate('AddCategory');
+                }}
+                style={{
+                  borderWidth: 0.5,
+                  borderColor: 'green',
+                  borderRadius: moderateScale(10),
+                  height: moderateScale(35),
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  alignSelf: 'flex-start',
+                  gap: moderateScale(10),
+                  paddingHorizontal: moderateScale(10),
+                  marginHorizontal: moderateScale(10),
+                }}>
+                <Ionicons
+                  name={'add-circle-outline'}
+                  size={moderateScale(25)}
+                  // color="black"
+                />
+
+                <Text
+                  style={{
+                    fontSize: moderateScale(15),
+                    fontWeight: 'bold',
+                    // color: 'black',
+                  }}>
+                  ADD New Category
+                </Text>
+              </Pressable>
+
+              {/* Select Category Option */}
+              <View
+                style={{
+                  width: '100%',
+                  height: '70%',
+                }}>
+                <View
+                  style={{
+                    padding: moderateScale(10),
+                    // borderWidth: 1,
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}>
+                  <Text
+                    style={{
+                      fontSize: moderateScale(20),
+                      fontWeight: 'bold',
+                    }}>
+                    Select Category
+                  </Text>
+
+                  <TouchableOpacity
+                    onPress={() => {
+                      setEditCategory(!editCategory);
+                      setCategory(null);
+                      setCategoryId();
+                    }}
+                    style={{
+                      borderWidth: 1,
+                      borderColor: 'gray',
+                      padding: moderateScale(5),
+                      paddingHorizontal: moderateScale(10),
+                      borderRadius: moderateScale(10),
+                      backgroundColor: editCategory ? 'lightgreen' : null,
+                    }}>
+                    <Text style={styles.commontSmallText}>Edit</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <FlatList
+                  verticalScale={true}
+                  numColumns={3}
+                  alignSelf={'center'}
+                  data={categories}
+                  keyExtractor={item => item.id.toString()}
+                  renderItem={({item}) =>
+                    item.id === 1 ? null : (
+                      <TouchableOpacity
+                        onPress={() => {
+                          if (editCategory) {
+                            setShowCategoryMenu(false);
+                            navigation.navigate('AddCategory', item);
+                          } else {
+                            id = item.id;
+                            setCategoryId(id);
+                            setCategory(item);
+                            console.log('name : ' + item.name);
+                            setShowCategoryMenu(false);
+                          }
+                        }}
                         style={{
-                          fontWeight: '600',
-                          color: categoryId === item.id ? 'white' : 'black',
+                          borderWidth: 0.8,
+                          borderColor: 'black',
+                          paddingVertical: moderateScale(6),
+                          paddingHorizontal: moderateScale(15),
+                          margin: moderateScale(4),
+                          marginTop: moderateScale(9),
+                          borderRadius: moderateScale(10),
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          backgroundColor:
+                            categoryId === item.id ? 'black' : 'white',
                         }}>
-                        {item.name}
-                      </Text>
-                    </TouchableOpacity>
-                  )
-                }
-              />
+                        {editCategory && (
+                          <View
+                            style={{
+                              borderWidth: 1,
+                              borderColor: 'green',
+                              backgroundColor: 'green',
+                              height: moderateScale(10),
+                              width: moderateScale(10),
+                              borderRadius: moderateScale(5),
+                              position: 'absolute',
+                              right: 2,
+                              top: 2,
+                            }}
+                          />
+                        )}
+                        <Text
+                          style={{
+                            fontWeight: '600',
+                            color: categoryId === item.id ? 'white' : 'black',
+                          }}>
+                          {item.name}
+                        </Text>
+                      </TouchableOpacity>
+                    )
+                  }
+                />
+              </View>
             </View>
-          </View>
+          </Modal>
         )}
         {/* // If Edit tab is selected then show this */}
         <ScrollView

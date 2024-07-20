@@ -1,130 +1,100 @@
+import React, {useState} from 'react';
 import {
+  Alert,
+  Modal,
   StyleSheet,
   Text,
+  Pressable,
   View,
-  Image,
-  useWindowDimensions,
   TouchableOpacity,
 } from 'react-native';
-import React, {useState} from 'react';
-import {AdvancedImage, upload} from 'cloudinary-react-native';
-import {cld} from '../service/cloudinary';
-import {launchImageLibrary} from 'react-native-image-picker';
-import {moderateScale} from 'react-native-size-matters';
 
 const ForTesting = () => {
-  const {width} = useWindowDimensions();
-  const myImage = cld.image('samples/chair');
-
-  // Add image states and functions
-  const [image, setImage] = useState(null);
-  const [imageDetail, setImageDetails] = useState(null);
-  console.log(imageDetail);
-  const openImagePicker = async () => {
-    const options = {
-      title: 'Select Image',
-      type: 'library',
-      options: {
-        mediaType: 'photo',
-        includeBase64: false,
-        maxHeight: 2000,
-        maxWidth: 2000,
-        selectionLimit: 1,
-      },
-    };
-
-    const image = await launchImageLibrary(options);
-    let imageUri = image.uri || image.assets?.[0]?.uri;
-
-    if (image.didCancel === true) {
-      setImage(null);
-      setImageDetails(null);
-    } else {
-      setImage(imageUri);
-      setImageDetails(image);
-    }
-  };
-
-  const uploadImage = async () => {
-    if (!imageDetail) {
-      return;
-    }
-
-    const options = {
-      upload_preset: 'Default',
-      unsigned: true,
-    };
-
-    await upload(cld, {
-      file: imageDetail,
-      options: options,
-      callback: (error, response) => {
-        console.log('ERROR ----> : ', error);
-        console.log('response ----> : ', response);
-      },
-    });
-  };
+  const [modalVisible, setModalVisible] = useState(false);
   return (
     <View
       style={{
         flex: 1,
-        paddingHorizontal: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
       }}>
-      {image && (
-        <Image
-          source={{uri: image}}
+      <Modal
+        animationType="slide"
+        transparent={false}
+        visible={modalVisible}
+        onRequestClose={() => {
+          Alert.alert('Modal has been closed.');
+          setModalVisible(!modalVisible);
+        }}>
+        <View
           style={{
-            width: '100%',
-            height: 200,
-            borderRadius: moderateScale(5),
-            marginBottom: moderateScale(10),
-            // resizeMode: 'contain',
-          }}
-        />
-      )}
-
-      <View>
-        <TouchableOpacity
-          onPress={openImagePicker}
-          style={{
-            borderWidth: 1,
-            height: moderateScale(40),
-            padding: moderateScale(5),
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderRadius: moderateScale(5),
-            marginBottom: moderateScale(10),
+            flex: 1,
+            height: '100%',
+            borderWidth: 10,
+            backgroundColor: 'white',
           }}>
-          <Text
+          <TouchableOpacity
             style={{
-              fontSize: moderateScale(20),
-              fontWeight: 'bold',
-            }}>
-            Add Image
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={uploadImage}
-          style={{
-            borderWidth: 1,
-            height: moderateScale(40),
-            padding: moderateScale(5),
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderRadius: moderateScale(5),
-            marginBottom: moderateScale(10),
-          }}>
-          <Text
-            style={{
-              fontSize: moderateScale(20),
-              fontWeight: 'bold',
-            }}>
-            Upload Image
-          </Text>
-        </TouchableOpacity>
-      </View>
+              borderWidth: 1,
+              height: 200,
+              width: 200,
+            }}
+            onPress={() => setModalVisible(false)}>
+            <Text>Hide</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
+      <Pressable
+        style={[styles.button, styles.buttonOpen]}
+        onPress={() => setModalVisible(true)}>
+        <Text style={styles.textStyle}>Show Modal</Text>
+      </Pressable>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  centeredView: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 22,
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 35,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  button: {
+    borderRadius: 20,
+    padding: 10,
+    elevation: 2,
+  },
+  buttonOpen: {
+    backgroundColor: '#F194FF',
+  },
+  buttonClose: {
+    backgroundColor: '#2196F3',
+  },
+  textStyle: {
+    color: 'white',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  modalText: {
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+});
 
 export default ForTesting;

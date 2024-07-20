@@ -261,8 +261,8 @@ export default function Home() {
                     style={{
                       height: moderateScale(30),
                       width: moderateScale(70),
-                      // borderWidth: 0.1,
-                      elevation: 1,
+                      borderWidth: 0.1,
+                      // elevation: 1,
                       borderColor: 'black',
                       paddingVertical: moderateScale(6),
                       paddingHorizontal: moderateScale(15),
@@ -501,17 +501,17 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   skeletonCardTestShadow: {
-    // borderWidth: 0.5,
+    borderWidth: 0.1,
     height: 30,
     marginBottom: 10,
     borderRadius: 10,
-    elevation: 1,
+    // elevation: 1,
   },
   skeletonCardImageShadow: {
     width: '90%',
     height: '30%',
     borderRadius: moderateScale(2),
-    // borderWidth: 0.1,
-    elevation: 1,
+    borderWidth: 0.1,
+    // elevation: 1,
   },
 });

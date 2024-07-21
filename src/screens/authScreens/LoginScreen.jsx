@@ -7,104 +7,78 @@ import {
   StyleSheet,
 } from 'react-native';
 import Spinner from 'react-native-loading-spinner-overlay';
-import {AuthContext} from '../context/AuthContext';
 import {moderateScale} from 'react-native-size-matters';
-import Button from '../components/Button';
 import {Formik} from 'formik';
-import {object, string} from 'yup';
+import {object, string, number, date, InferType} from 'yup';
+import {ActivityIndicator} from 'react-native-paper';
+import Button from '../../components/Button';
+import { AuthContext } from '../../context/AuthContext';
 
-const RegisterScreen = ({navigation}) => {
+const LoginScreen = ({navigation}) => {
+  const {isLoading, login, userInfo} = useContext(AuthContext);
   const [showPass, setShowPass] = useState(true);
-
-  const {isLoading, register} = useContext(AuthContext);
+  const [err, setErr] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   let userSchema = object({
-    name: string().required('please enter name'),
-    username: string().required('Please enter username'),
-    email: string()
-      .email('Please Enter valid Email')
-      .required('please enter email'),
-    password: string()
-      .required('plase enter password')
-      .min(6, 'Password should be atleast 6 charactors'),
+    usernameOrEmail: string().required('Please Enter UserName or Email'),
+    password: string().required('Please Enter Password'),
   });
+
   return (
     <View style={styles.container}>
-      <Spinner visible={isLoading} />
+      {loading && (
+        <View
+          style={{
+            flex: 1,
+            position: 'absolute',
+            zIndex: 1,
+            // borderWidth: 1,
+            height: '100%',
+            width: '100%',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}>
+          <ActivityIndicator
+            style={{
+              alignSelf: 'center',
+            }}
+            color="black"
+            size={'large'}
+          />
+        </View>
+      )}
       <View style={styles.wrapper}>
         <Formik
           validationSchema={userSchema}
           style={styles.wrapper}
-          initialValues={{name: '', username: '', email: '', password: ''}}
+          initialValues={{usernameOrEmail: '', password: ''}}
           onSubmit={values => {
-            console.log(
-              values.name,
-              values.username,
-              values.email,
-              values.password,
-            );
-            register(
-              values.name,
-              values.username,
-              values.email,
-              values.password,
-            );
-
-            navigation.goBack();
+            setErr(false);
+            setLoading(true);
+            login(values.usernameOrEmail, values.password);
+            setTimeout(() => {
+              setErr(true);
+              setLoading(false);
+            }, 9000);
           }}>
           {({handleChange, handleBlur, handleSubmit, values, errors}) => (
             <View>
               <TextInput
-                placeholder="Enter Your name"
+                placeholder="Enter Username or Email here..."
                 style={styles.input}
-                onChangeText={handleChange('name')}
-                onBlur={handleBlur('name')}
-                value={values.name}
+                onChangeText={handleChange('usernameOrEmail')}
+                onBlur={handleBlur('usernameOrEmail')}
+                value={values.usernameOrEmail}
               />
-              {errors.name && (
+              {errors.usernameOrEmail && (
                 <Text
                   style={{
                     color: 'red',
                     marginBottom: moderateScale(20),
                     marginTop: moderateScale(-10),
                   }}>
-                  {errors.name}
-                </Text>
-              )}
-
-              <TextInput
-                placeholder="Enter Your Username"
-                style={styles.input}
-                onChangeText={handleChange('username')}
-                onBlur={handleBlur('username')}
-                value={values.username}
-              />
-              {errors.username && (
-                <Text
-                  style={{
-                    color: 'red',
-                    marginBottom: moderateScale(20),
-                    marginTop: moderateScale(-10),
-                  }}>
-                  {errors.username}
-                </Text>
-              )}
-
-              <TextInput
-                placeholder="Enter Your Email"
-                style={styles.input}
-                onChangeText={handleChange('email')}
-                onBlur={handleBlur('email')}
-                value={values.email}
-              />
-              {errors.email && (
-                <Text
-                  style={{
-                    color: 'red',
-                    marginBottom: moderateScale(20),
-                    marginTop: moderateScale(-10),
-                  }}>
-                  {errors.email}
+                  {errors.usernameOrEmail}
                 </Text>
               )}
               <View
@@ -123,6 +97,7 @@ const RegisterScreen = ({navigation}) => {
                   style={{
                     width: '80%',
                     maxWidth: '80%',
+                    // borderWidth: 1,
                   }}
                   placeholder="Enter Password"
                   onChangeText={handleChange('password')}
@@ -133,7 +108,7 @@ const RegisterScreen = ({navigation}) => {
                 <TouchableOpacity onPress={() => setShowPass(!showPass)}>
                   {showPass ? <Text>Show</Text> : <Text>Hide</Text>}
                 </TouchableOpacity>
-              </View>
+            </View>
               {errors.password && (
                 <Text
                   style={{
@@ -145,32 +120,22 @@ const RegisterScreen = ({navigation}) => {
                 </Text>
               )}
 
-              <Button onPress={handleSubmit} title="Register" />
+              {err && (
+                <Text
+                  style={{
+                    color: 'red',
+                  }}>
+                  Email or Password is wrong
+                </Text>
+              )}
+
+              <Button onPress={handleSubmit} title="Login" />
+              
             </View>
           )}
         </Formik>
 
-        {/* <TextInput
-          style={styles.input}
-          value={name}
-          placeholder="Enter name"
-          onChangeText={text => setName(text)}
-        />
-        <TextInput
-          style={styles.input}
-          value={username}
-          placeholder="Enter username"
-          onChangeText={text => setUsername(text)}
-        />
-
-        <TextInput
-          style={styles.input}
-          value={email}
-          placeholder="Enter email"
-          onChangeText={text => setEmail(text)}
-        />
-
-        <View
+        {/* <View
           style={{
             flexDirection: 'row',
             justifyContent: 'space-between',
@@ -186,9 +151,10 @@ const RegisterScreen = ({navigation}) => {
             style={{
               maxWidth: '80%',
             }}
-            value={password}
-            placeholder="Enter password"
-            onChangeText={text => setPassword(text)}
+            placeholder="Enter Password"
+            onChangeText={handleChange('password')}
+            onBlur={handleBlur('password')}
+            value={values.password}
             secureTextEntry={showPass && true}
           />
           <TouchableOpacity
@@ -200,20 +166,22 @@ const RegisterScreen = ({navigation}) => {
             }>
             {showPass ? <Text>Show</Text> : <Text>Hide</Text>}
           </TouchableOpacity>
-        </View>
+        </View> */}
 
-        <Button
-          title="Register"
+        {/* <Button
+          borderWidth="1"
+          color={''}
+          borderColor={'black'}
+          title="Login"
           onPress={() => {
-            register(name, username, email, password);
-            navigation.goBack();
+            login(usernameOrEmail, password);
           }}
         /> */}
 
         <View style={{flexDirection: 'row', marginTop: 20}}>
-          <Text>Already have an accoutn? </Text>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Text style={styles.link}>Login</Text>
+          <Text>Don't have an account? </Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+            <Text style={styles.link}>Register</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -244,4 +212,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default RegisterScreen;
+export default LoginScreen;

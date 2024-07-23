@@ -399,7 +399,7 @@ const markdownStyles = StyleSheet.create({
   text: {
     color: 'black',
     // fontSize: moderateScale(19),
-    fontWeight: '400',
+    // fontWeight: '400',
   },
   heading2: {
     fontFamily: 'InterBold',

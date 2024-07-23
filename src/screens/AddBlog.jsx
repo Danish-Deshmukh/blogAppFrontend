@@ -11,12 +11,12 @@ import {
   FlatList,
   Pressable,
   ActivityIndicator,
+  Button,
 } from 'react-native';
 
 import React, {useContext, useEffect, useState} from 'react';
 import {moderateScale, verticalScale} from 'react-native-size-matters';
 import {AuthContext} from '../context/AuthContext';
-import Button from '../components/Button';
 import axios from 'axios';
 import {PreventRemoveContext, useNavigation} from '@react-navigation/native';
 import * as Yup from 'yup';
@@ -46,11 +46,36 @@ const AddBlog = item => {
   const [postId, setPostId] = useState();
   const [title, setTitle] = useState();
   const [description, setDescription] = useState();
-  const [content, setContent] = useState('');
   const [categoryId, setCategoryId] = useState();
   const [category, setCategory] = useState(null);
   const [forUpdate, setForUpdate] = useState(false);
   const [errors, setErrors] = useState({});
+  const [content, setContent] = useState('');
+  const [selection, setSelection] = useState({start: 0, end: 0});
+  const insertText = (prefix, suffix = '') => {
+    const start = content.slice(0, selection.start);
+    const selectedText = content.slice(selection.start, selection.end);
+    const end = content.slice(selection.end);
+    setContent(`${start}${prefix}${selectedText}${suffix}${end}`);
+  };
+
+  const handleBold = () => {
+    insertText('**', '**');
+  };
+
+  const handleItalic = () => {
+    insertText('*', '*');
+  };
+
+  const handleHeading = () => {
+    insertText('# ');
+  };
+  const handleSubHeading = () => {
+    insertText('## ');
+  };
+  const handleCode = () => {
+    insertText('\n``` \n', '\n ```');
+  };
 
   // QUERY AND STATES FOR FETCHING CATEGORIES
   const [showCategoryMenu, setShowCategoryMenu] = useState(false);
@@ -570,7 +595,7 @@ const AddBlog = item => {
               )}
             </View>
 
-            {/* Category related container */}
+            {/* Category Select related container */}
             <View>
               {/* Create or Select category  */}
               <Pressable
@@ -899,6 +924,7 @@ const AddBlog = item => {
                 }}>
                 <View style={styles.CommonClearContainer}>
                   <Text style={styles.contentText}>Content : </Text>
+                  {/* Clear button */}
                   <TouchableOpacity
                     onPress={() => {
                       Alert.alert(
@@ -926,6 +952,11 @@ const AddBlog = item => {
                   style={styles.contentText}
                   value={content}
                   onChangeText={setContent}
+                  onSelectionChange={({nativeEvent: {selection, text}}) => {
+                    setSelection(selection);
+                    console.log(selection);
+                    console.log(text);
+                  }}
                   // onBlur={handleBlur('title')}
                   multiline
                   placeholder="Enter content here..."
@@ -934,49 +965,16 @@ const AddBlog = item => {
                   <Text style={styles.errorText}>{errors.content}</Text>
                 )}
               </View>
-
-              {/* Submit Post Button and Errors */}
-              {/* {done && (
-                <View
-                  style={{
-                    flex: 1,
-                    height: '100%',
-                    position: 'absolute',
-                    width: '100%',
-                    // justifyContent: 'center',
-                    alignItems: 'center',
-                    // borderWidth: 1,
-                    borderRadius: moderateScale(10),
-                    zIndex: 1,
-                    // opacity: 0.5,
-                    backgroundColor: 'rgba(235, 232, 232, 0.8)',
-                  }}>
-                  <Button
-                    onPress={handleSubmit}
-                    title={post ? 'Update' : 'Post'}
-                  />
-                  {(errors.content || errors.title || errors.description) && (
-                    <Text
-                      style={[styles.errorText, {fontSize: moderateScale(17)}]}>
-                      Resolve the below Errors First
-                    </Text>
-                  )}
-
-                  {errors.title && (
-                    <Text style={styles.errorText}>{errors.title}</Text>
-                  )}
-                  {errors.description && (
-                    <Text style={styles.errorText}>{errors.description}</Text>
-                  )}
-
-                  {errors.content && (
-                    <Text style={styles.errorText}>{errors.content}</Text>
-                  )}
-                </View>
-              )} */}
             </View>
           </View>
         </ScrollView>
+      </View>
+      <View style={styles.toolbar}>
+        <Button title="H1" onPress={handleHeading} color={'black'} />
+        <Button title="H2" onPress={handleSubHeading} color={'black'} />
+        <Button title="B" onPress={handleBold} color={'black'} />
+        <Button title="I" onPress={handleItalic} color={'black'} />
+        <Button title="</>" onPress={handleCode} color={'black'} />
       </View>
     </>
   );
@@ -1056,5 +1054,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: moderateScale(3),
     borderRadius: moderateScale(3),
+  },
+  toolbar: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    // marginBottom: 10,
+    gap: 10,
+    position: 'absolute',
+    bottom: 0,
+    // borderWidth: 1,
+    width: '100%',
+    backgroundColor: 'white',
   },
 });

@@ -59,12 +59,12 @@ export default function Profile() {
           zIndex: 1,
           right: 10,
           top: 10,
-          backgroundColor: 'white',
+          backgroundColor: 'gray',
           borderWidth: 0.4,
           padding: moderateScale(10),
           borderRadius: moderateScale(10),
         }}>
-        <Text style={{color: 'black'}}>Logout</Text>
+        <Text style={{color: 'white'}}>Logout</Text>
       </TouchableOpacity>
 
       {/* EDIT PROFILE */}
@@ -78,13 +78,12 @@ export default function Profile() {
           zIndex: 1,
           right: 10,
           bottom: 10,
-          backgroundColor: '#2eb82e',
+          backgroundColor: 'black',
           padding: moderateScale(10),
           borderRadius: moderateScale(10),
         }}>
         <Text style={{color: 'white'}}>Edit</Text>
       </Pressable>
-
 
       <View
         style={{
@@ -175,11 +174,12 @@ export default function Profile() {
           </View>
         </View>
       </View>
-      <View style={{
-        minHeight: '70%',
-        // borderWidth: 1,
-        backgroundColor: 'white',
-        borderTopRightRadius: moderateScale(70)
+      <View
+        style={{
+          minHeight: '70%',
+          // borderWidth: 1,
+          backgroundColor: 'white',
+          borderTopRightRadius: moderateScale(70),
         }}>
         <Text style={styles.normalTextHeadingCommonProp}>User Name</Text>
         <Text style={styles.normalTextCommonProp}>{userName}</Text>
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     // borderWidth: 2,
-    backgroundColor: 'black'
+    backgroundColor: 'black',
   },
   normalTextHeadingCommonProp: {
     color: 'black',

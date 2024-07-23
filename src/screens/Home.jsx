@@ -25,6 +25,7 @@ import {ActivityIndicator} from 'react-native-paper';
 import Card from '../components/Card';
 import {moderateScale, verticalScale} from 'react-native-size-matters';
 import FoundationIcon from 'react-native-vector-icons/Foundation';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {
   useFocusEffect,
@@ -34,7 +35,7 @@ import {
 import {AuthContext} from '../context/AuthContext';
 
 export default function Home() {
-  const {REST_API_BASE_URL} = useContext(AuthContext);
+  const {isAdmin, userInfo, REST_API_BASE_URL} = useContext(AuthContext);
   const navigation = useNavigation();
 
   const scrollConst = moderateScale(100);
@@ -459,6 +460,7 @@ export default function Home() {
           />
         ) : (
           <FlatList
+            ref={ref}
             data={postByCategory}
             renderItem={({item}) => <Card item={item} />}
             onScroll={e => {
@@ -476,6 +478,33 @@ export default function Home() {
           />
         )}
       </View>
+
+      {isAdmin && (
+        <TouchableOpacity
+          onPress={() => {
+            navigation.navigate('AddBlog');
+          }}
+          style={{
+            position: 'absolute',
+            height: 60,
+            width: 60,
+            borderRadius: 30,
+            bottom: 10,
+            right: 10,
+            zIndex: 1,
+            backgroundColor: 'white',
+            justifyContent: 'center',
+            alignItems: 'center',
+            elevation: 10,
+            backgroundColor: 'black',
+          }}>
+          <FontAwesome
+            name={'pencil-square-o'}
+            size={moderateScale(22)}
+            color="white"
+          />
+        </TouchableOpacity>
+      )}
     </View>
   );
 }

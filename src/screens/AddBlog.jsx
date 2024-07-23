@@ -50,32 +50,6 @@ const AddBlog = item => {
   const [category, setCategory] = useState(null);
   const [forUpdate, setForUpdate] = useState(false);
   const [errors, setErrors] = useState({});
-  const [content, setContent] = useState('');
-  const [selection, setSelection] = useState({start: 0, end: 0});
-  const insertText = (prefix, suffix = '') => {
-    const start = content.slice(0, selection.start);
-    const selectedText = content.slice(selection.start, selection.end);
-    const end = content.slice(selection.end);
-    setContent(`${start}${prefix}${selectedText}${suffix}${end}`);
-  };
-
-  const handleBold = () => {
-    insertText('**', '**');
-  };
-
-  const handleItalic = () => {
-    insertText('*', '*');
-  };
-
-  const handleHeading = () => {
-    insertText('# ');
-  };
-  const handleSubHeading = () => {
-    insertText('## ');
-  };
-  const handleCode = () => {
-    insertText('\n``` \n', '\n ```');
-  };
 
   // QUERY AND STATES FOR FETCHING CATEGORIES
   const [showCategoryMenu, setShowCategoryMenu] = useState(false);
@@ -116,14 +90,6 @@ const AddBlog = item => {
     }
   };
 
-  // useEffect(() => {
-  //   if (readableItem) {
-  //     console.log('----------> added update fields ');
-  //     setCategoryId(readableItem.categoryId);
-  //     const imgeUrl = `${REST_API_BASE_URL}/image/${readableItem.image}`;
-  //     setImage(imgeUrl);
-  //   }
-  // }, []);
   const Refresh = () => {
     // client.clear();
     client.invalidateQueries(['posts']);
@@ -137,13 +103,12 @@ const AddBlog = item => {
   let userSchema = Yup.object().shape({
     title: Yup.string()
       .required('Please Enter Title')
-      .min(3, 'Title must be 3 or more charactors'),
+      .min(3, 'Title must be 3 or more charactors')
+      .max(150, 'Title must be less then 150 charactors'),
     description: Yup.string()
       .required('Please Enter Description')
-      .min(5, 'description should be 5 or more charactors'),
-    content: Yup.string()
-      .required('Please Enter Content')
-      .min(10, 'content should not be less then 10 charactors'),
+      .min(5, 'description should be 15 or more charactors')
+      .max(250, 'Description must be less then 250 charactors'),
     categoryId: Yup.number().required('Please Select Category'),
   });
 
@@ -154,7 +119,7 @@ const AddBlog = item => {
       // console.log('inside the try block');
       // Awaiting for Yup to validate text
       await userSchema.validate(
-        {title, description, content, categoryId},
+        {title, description, categoryId},
         {abortEarly: false},
       );
 
@@ -163,7 +128,6 @@ const AddBlog = item => {
         id: postId,
         title: title,
         description: description,
-        content: content,
         categoryId: category.id,
         image: imageDetail,
         forUpdate: forUpdate,
@@ -173,7 +137,7 @@ const AddBlog = item => {
       // console.log(post.category);
       // console.log(post.imageDetail);
       // console.log(imageDetail);
-      navigation.navigate('PreviewScreen', post);
+      navigation.navigate('AddConent', post);
 
       setErrors({});
     } catch (error) {
@@ -360,7 +324,6 @@ const AddBlog = item => {
       setPostId(post.id);
       setTitle(post.title);
       setDescription(post.description);
-      setContent(post.content);
       setCategoryId(post.categoryId);
       setForUpdate(true);
       getCategoryById();
@@ -429,32 +392,11 @@ const AddBlog = item => {
               // borderWidth: 1,
               flex: 1,
               flexDirection: 'row',
-              justifyContent: 'space-between',
+              justifyContent: 'flex-end',
               alignItems: 'center',
               paddingRight: moderateScale(8),
             }}>
-            {/* Template Button */}
-            <TouchableOpacity
-              onPress={() => {
-                navigation.navigate('TemplateForMarkdown');
-              }}
-              style={{
-                // borderWidth: 1,
-                borderRadius: moderateScale(5),
-                paddingVertical: moderateScale(4),
-                paddingHorizontal: moderateScale(8),
-                backgroundColor: 'lightgreen',
-              }}>
-              <Text
-                style={{
-                  color: 'black',
-                  fontWeight: 'bold',
-                }}>
-                Template
-              </Text>
-            </TouchableOpacity>
-
-            {/* Done button */}
+            {/* Add content button */}
             <TouchableOpacity
               onPress={nextPage}
               style={{
@@ -464,13 +406,15 @@ const AddBlog = item => {
                 paddingHorizontal: moderateScale(8),
                 backgroundColor: 'black',
               }}>
-              <Text
-                style={{
-                  color: 'white',
-                  fontWeight: 'bold',
-                }}>
-                Preview
-              </Text>
+              {post ? (
+                <Text style={{color: 'white', fontWeight: 'bold'}}>
+                  Update Content
+                </Text>
+              ) : (
+                <Text style={{color: 'white', fontWeight: 'bold'}}>
+                  Add Content
+                </Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>
@@ -512,7 +456,7 @@ const AddBlog = item => {
                       fontSize: moderateScale(20),
                       fontWeight: 'bold',
                     }}>
-                    Add Image{' '}
+                    Add Cover Image
                   </Text>
                 </TouchableOpacity>
               ) : (
@@ -913,68 +857,9 @@ const AddBlog = item => {
               {errors.description && (
                 <Text style={styles.errorText}>{errors.description}</Text>
               )}
-
-              {/* Content */}
-              <View
-                style={{
-                  borderWidth: 1,
-                  borderRadius: moderateScale(10),
-                  padding: moderateScale(5),
-                  minHeight: moderateScale(500),
-                }}>
-                <View style={styles.CommonClearContainer}>
-                  <Text style={styles.contentText}>Content : </Text>
-                  {/* Clear button */}
-                  <TouchableOpacity
-                    onPress={() => {
-                      Alert.alert(
-                        'Clear Content',
-                        'Are you sure you want to Clear all the data in the Content',
-                        [
-                          {
-                            text: 'Cancel',
-                            style: 'cancel',
-                          },
-                          {
-                            text: 'OK',
-                            onPress: () => {
-                              setContent('');
-                            },
-                          },
-                        ],
-                      );
-                    }}
-                    style={styles.CommonClearButton}>
-                    <Text>Clear</Text>
-                  </TouchableOpacity>
-                </View>
-                <TextInput
-                  style={styles.contentText}
-                  value={content}
-                  onChangeText={setContent}
-                  onSelectionChange={({nativeEvent: {selection, text}}) => {
-                    setSelection(selection);
-                    console.log(selection);
-                    console.log(text);
-                  }}
-                  // onBlur={handleBlur('title')}
-                  multiline
-                  placeholder="Enter content here..."
-                />
-                {errors.content && (
-                  <Text style={styles.errorText}>{errors.content}</Text>
-                )}
-              </View>
             </View>
           </View>
         </ScrollView>
-      </View>
-      <View style={styles.toolbar}>
-        <Button title="H1" onPress={handleHeading} color={'black'} />
-        <Button title="H2" onPress={handleSubHeading} color={'black'} />
-        <Button title="B" onPress={handleBold} color={'black'} />
-        <Button title="I" onPress={handleItalic} color={'black'} />
-        <Button title="</>" onPress={handleCode} color={'black'} />
       </View>
     </>
   );
@@ -1054,16 +939,5 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: moderateScale(3),
     borderRadius: moderateScale(3),
-  },
-  toolbar: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    // marginBottom: 10,
-    gap: 10,
-    position: 'absolute',
-    bottom: 0,
-    // borderWidth: 1,
-    width: '100%',
-    backgroundColor: 'white',
   },
 });

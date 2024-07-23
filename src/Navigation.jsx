@@ -15,7 +15,7 @@ import SplashLoadingScreen from './screens/SplashLoadingScreen';
 import {moderateScale} from 'react-native-size-matters';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import OcticonsIcon from 'react-native-vector-icons/Octicons';
-import FeatherIcons from 'react-native-vector-icons/Feather';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import CommentsCard from './screens/CommentsCard';
 import ShowPostComments from './screens/ShowPostComments';
@@ -25,6 +25,8 @@ import ForTesting from './forDelete/ForTesting';
 import AddCategory from './screens/AddCategory';
 import PreviewScreen from './screens/PreviewScreen';
 import TemplateForMarkdown from './screens/TemplateForMarkdown';
+import AddContent from './screens/AddContent';
+import Bookmark from './screens/Bookmark';
 
 const NativeSTACK = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -46,8 +48,8 @@ export function BottomTab() {
           headerTitle: 'Blog App',
           tabBarLabel: () => {},
           tabBarIcon: ({focused}) => (
-            <OcticonsIcon
-              name={'home'}
+            <Ionicons
+              name={focused ? 'home' : 'home-outline'}
               size={moderateScale(28)}
               color={focused ? 'black' : 'gray'}
             />
@@ -63,23 +65,21 @@ export function BottomTab() {
         />
       ) : userInfo.accessToken ? (
         <>
-          {isAdmin ? (
-            <Tab.Screen
-              name="AddBlog"
-              component={AddBlog}
-              options={{
-                headerShown: false,
-                tabBarLabel: () => {},
-                tabBarIcon: ({focused}) => (
-                  <Ionicons
-                    name={'add-circle-outline'}
-                    size={moderateScale(40)}
-                    color={focused ? 'black' : 'gray'}
-                  />
-                ),
-              }}
-            />
-          ) : null}
+          <Tab.Screen
+            name="Bookmark"
+            component={Bookmark}
+            options={{
+              headerShown: false,
+              tabBarLabel: () => {},
+              tabBarIcon: ({focused}) => (
+                <Ionicons
+                  name={focused ? 'bookmarks' : 'bookmarks-outline'}
+                  size={moderateScale(25)}
+                  color={focused ? 'black' : 'gray'}
+                />
+              ),
+            }}
+          />
           <Tab.Screen
             name="Profile"
             component={Profile}
@@ -87,9 +87,10 @@ export function BottomTab() {
               headerShown: false,
               tabBarLabel: () => {},
               tabBarIcon: ({focused}) => (
-                <FeatherIcons
-                  name={'user'}
-                  size={moderateScale(32)}
+                <FontAwesome
+                  // name={'user'}
+                  name={focused ? 'user' : 'user-o'}
+                  size={moderateScale(30)}
                   color={focused ? 'black' : 'gray'}
                 />
               ),
@@ -195,7 +196,14 @@ export default function Navigation() {
           component={AddBlog}
           options={{
             headerShown: false,
-            headerTitle: 'Back',
+            animation: 'slide_from_right',
+          }}
+        />
+        <NativeSTACK.Screen
+          name="AddConent"
+          component={AddContent}
+          options={{
+            headerShown: false,
           }}
         />
         <NativeSTACK.Screen
@@ -204,7 +212,7 @@ export default function Navigation() {
           options={{
             headerShown: true,
             headerTitle: 'Back',
-            animation: 'slide_from_right'
+            animation: 'slide_from_right',
           }}
         />
         <NativeSTACK.Screen
@@ -213,7 +221,7 @@ export default function Navigation() {
           options={{
             headerShown: true,
             headerTitle: 'Preview of the Post',
-            animation: 'slide_from_right'
+            animation: 'slide_from_right',
           }}
         />
         <NativeSTACK.Screen

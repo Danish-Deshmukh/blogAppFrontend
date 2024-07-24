@@ -45,7 +45,7 @@ export default function Card({item}) {
           {/* <Text style={[styles.text, styles.titleText]} numberOfLines={1}>
             {item.id}
           </Text> */}
-          <Text style={[styles.text, styles.titleText]} numberOfLines={4}>
+          <Text style={[styles.text, styles.titleText]} numberOfLines={3}>
             {item.title}
           </Text>
         </View>
@@ -55,7 +55,7 @@ export default function Card({item}) {
               // borderWidth: 1,
             }
           }>
-          <Text style={[styles.text, styles.descText]} numberOfLines={2}>
+          <Text style={[styles.text, styles.descText]} numberOfLines={1}>
             {item.description}
           </Text>
         </View>

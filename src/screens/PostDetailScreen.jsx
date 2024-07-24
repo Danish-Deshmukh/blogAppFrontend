@@ -28,8 +28,8 @@ import Markdown from 'react-native-markdown-display';
 
 export default function PostDetailScreen(item) {
   const post = item.route.params;
-  const {isAdmin, userInfo, REST_API_BASE_URL} = useContext(AuthContext);
-  const [serverError, setServerError] = useState(false);
+  const {isAdmin, userInfo, logout, REST_API_BASE_URL} =
+    useContext(AuthContext);
   const [auther, setAuther] = useState('Deshmukh');
   const [fullViewImage, setFullViewImage] = useState(false);
   const navigation = useNavigation();
@@ -127,7 +127,7 @@ export default function PostDetailScreen(item) {
         console.log(e.response.status);
 
         if (e.response.status >= 500) {
-          setServerError(true);
+          serverError();
         }
         if (e.response.status === 404) {
           pageNotFoundError();
@@ -137,6 +137,51 @@ export default function PostDetailScreen(item) {
           tockenExpire();
         }
       });
+  };
+  const serverError = () => {
+    Alert.alert(
+      'Something went wrong',
+      'Internal Server error problem status code 500',
+      [
+        {
+          text: 'OK',
+        },
+      ],
+    );
+  };
+  const pageNotFoundError = () => {
+    Alert.alert(
+      'Post Not found',
+      'Post is not present in the database you need to restart the application to see the changes ',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'OK',
+        },
+      ],
+    );
+  };
+  const tockenExpire = () => {
+    Alert.alert(
+      'Token Expire',
+      'You need to login again to preform this operation, Press "OK" to logout ',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'OK',
+          onPress: () => {
+            logout();
+            navigation.navigate('Login');
+          },
+        },
+      ],
+    );
   };
   return (
     <View style={{flex: 1}}>
@@ -359,21 +404,6 @@ export default function PostDetailScreen(item) {
           <Text>-*-*-*-* END *-*-*-*-</Text>
         </View>
       </ScrollView>
-
-      {/* For server Error */}
-      {serverError &&
-        Alert.alert(
-          'Something went wrong',
-          'Internal Server error problem status code 500',
-          [
-            {
-              text: 'OK',
-              onPress: () => {
-                setServerError(false);
-              },
-            },
-          ],
-        )}
     </View>
   );
 }

@@ -48,8 +48,41 @@ const AddBlog = item => {
   const [description, setDescription] = useState();
   const [categoryId, setCategoryId] = useState();
   const [category, setCategory] = useState(null);
+  const [content, setContent] = useState('');
+  const [showToolBar, setShowToolBar] = useState(false);
   const [forUpdate, setForUpdate] = useState(false);
   const [errors, setErrors] = useState({});
+  const [selection, setSelection] = useState({start: 0, end: 0});
+  const insertText = (prefix, suffix = '') => {
+    const start = content.slice(0, selection.start);
+    const selectedText = content.slice(selection.start, selection.end);
+    const end = content.slice(selection.end);
+    setContent(`${start}${prefix}${selectedText}${suffix}${end}`);
+  };
+
+  const handleBold = () => {
+    insertText('**', '**');
+  };
+
+  const handleItalic = () => {
+    insertText('*', '*');
+  };
+
+  const handleHeading = () => {
+    insertText('# ');
+  };
+  const handleList = () => {
+    insertText('\n-  \n-  \n-  ');
+  };
+  const handleLink = () => {
+    insertText('\n-  \n-  \n-  ');
+  };
+  const handleSubHeading = () => {
+    insertText('## ');
+  };
+  const handleCode = () => {
+    insertText('\n``` \n', '\n \n```\n');
+  };
 
   // QUERY AND STATES FOR FETCHING CATEGORIES
   const [showCategoryMenu, setShowCategoryMenu] = useState(false);
@@ -109,6 +142,9 @@ const AddBlog = item => {
       .required('Please Enter Description')
       .min(5, 'description should be 15 or more charactors')
       .max(250, 'Description must be less then 250 charactors'),
+    content: Yup.string()
+      .required('Please Enter Content')
+      .min(10, 'content should not be less then 10 charactors'),
     categoryId: Yup.number().required('Please Select Category'),
   });
 
@@ -119,7 +155,7 @@ const AddBlog = item => {
       // console.log('inside the try block');
       // Awaiting for Yup to validate text
       await userSchema.validate(
-        {title, description, categoryId},
+        {title, description, content, categoryId},
         {abortEarly: false},
       );
 
@@ -128,6 +164,7 @@ const AddBlog = item => {
         id: postId,
         title: title,
         description: description,
+        content: content,
         categoryId: category.id,
         image: imageDetail,
         forUpdate: forUpdate,
@@ -137,7 +174,7 @@ const AddBlog = item => {
       // console.log(post.category);
       // console.log(post.imageDetail);
       // console.log(imageDetail);
-      navigation.navigate('AddConent', post);
+      navigation.navigate('PreviewScreen', post);
 
       setErrors({});
     } catch (error) {
@@ -324,6 +361,7 @@ const AddBlog = item => {
       setPostId(post.id);
       setTitle(post.title);
       setDescription(post.description);
+      setContent(post.content);
       setCategoryId(post.categoryId);
       setForUpdate(true);
       getCategoryById();
@@ -392,11 +430,32 @@ const AddBlog = item => {
               // borderWidth: 1,
               flex: 1,
               flexDirection: 'row',
-              justifyContent: 'flex-end',
+              justifyContent: 'space-between',
               alignItems: 'center',
               paddingRight: moderateScale(8),
             }}>
-            {/* Add content button */}
+            {/* Template Button */}
+            <TouchableOpacity
+              onPress={() => {
+                navigation.navigate('TemplateForMarkdown');
+              }}
+              style={{
+                // borderWidth: 1,
+                borderRadius: moderateScale(5),
+                paddingVertical: moderateScale(4),
+                paddingHorizontal: moderateScale(8),
+                backgroundColor: 'lightgreen',
+              }}>
+              <Text
+                style={{
+                  color: 'black',
+                  fontWeight: 'bold',
+                }}>
+                Template
+              </Text>
+            </TouchableOpacity>
+
+            {/* Done button */}
             <TouchableOpacity
               onPress={nextPage}
               style={{
@@ -406,15 +465,13 @@ const AddBlog = item => {
                 paddingHorizontal: moderateScale(8),
                 backgroundColor: 'black',
               }}>
-              {post ? (
-                <Text style={{color: 'white', fontWeight: 'bold'}}>
-                  Update Content
-                </Text>
-              ) : (
-                <Text style={{color: 'white', fontWeight: 'bold'}}>
-                  Add Content
-                </Text>
-              )}
+              <Text
+                style={{
+                  color: 'white',
+                  fontWeight: 'bold',
+                }}>
+                Preview
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -424,7 +481,7 @@ const AddBlog = item => {
       <View
         style={{
           flex: 1,
-          padding: moderateScale(20),
+          padding: moderateScale(10),
         }}>
         {/* // If Edit tab is selected then show this */}
         <ScrollView
@@ -857,10 +914,129 @@ const AddBlog = item => {
               {errors.description && (
                 <Text style={styles.errorText}>{errors.description}</Text>
               )}
+
+              {/* Content */}
+              <View
+                style={{
+                  borderWidth: 1,
+                  borderRadius: moderateScale(10),
+                  padding: moderateScale(5),
+                  minHeight: moderateScale(500),
+                }}>
+                <View style={styles.CommonClearContainer}>
+                  <Text style={styles.contentText}>Content : </Text>
+                  {/* Clear button */}
+                  <TouchableOpacity
+                    onPress={() => {
+                      Alert.alert(
+                        'Clear Content',
+                        'Are you sure you want to Clear all the data in the Content',
+                        [
+                          {
+                            text: 'Cancel',
+                            style: 'cancel',
+                          },
+                          {
+                            text: 'OK',
+                            onPress: () => {
+                              setContent('');
+                            },
+                          },
+                        ],
+                      );
+                    }}
+                    style={styles.CommonClearButton}>
+                    <Text>Clear</Text>
+                  </TouchableOpacity>
+                </View>
+                <TextInput
+                  style={styles.contentText}
+                  value={content}
+                  onChangeText={setContent}
+                  onSelectionChange={({nativeEvent: {selection, text}}) => {
+                    setSelection(selection);
+                    console.log(selection);
+                    console.log(text);
+                  }}
+                  onBlur={() => {
+                    setShowToolBar(false);
+                  }}
+                  onFocus={() => {
+                    setShowToolBar(true);
+                  }}
+                  multiline
+                  placeholder="Enter content here..."
+                />
+                {errors.content && (
+                  <Text style={styles.errorText}>{errors.content}</Text>
+                )}
+              </View>
             </View>
           </View>
+          {/* Below View is for adjusting with the heading height when scrolling  */}
+          <View style={{height: moderateScale(30)}} />
         </ScrollView>
       </View>
+      {/* Toolbar for content */}
+      {showToolBar && (
+        <View style={styles.toolbar}>
+          <TouchableOpacity
+            onPress={handleHeading}
+            style={styles.toolbarButton}>
+            <Text style={{color: 'black', fontSize: moderateScale(18)}}>
+              H1
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={handleSubHeading}
+            style={styles.toolbarButton}>
+            <Text style={{color: 'black'}}>H2</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleBold} style={styles.toolbarButton}>
+            <FeatherIcons
+              name={'bold'}
+              size={moderateScale(22)}
+              color="black"
+            />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleItalic} style={styles.toolbarButton}>
+            <FeatherIcons
+              name={'italic'}
+              size={moderateScale(22)}
+              color="black"
+            />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleList} style={styles.toolbarButton}>
+            <FeatherIcons
+              name={'list'}
+              size={moderateScale(22)}
+              color="black"
+            />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleLink} style={styles.toolbarButton}>
+            <FeatherIcons
+              name={'link'}
+              size={moderateScale(20)}
+              color="black"
+            />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleCode} style={styles.toolbarButton}>
+            <FeatherIcons
+              name={'code'}
+              size={moderateScale(22)}
+              color="black"
+            />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleCode} style={styles.toolbarButton}>
+            <FeatherIcons
+              name={'image'}
+              size={moderateScale(22)}
+              color="black"
+            />
+          </TouchableOpacity>
+        </View>
+      )}
     </>
   );
 };
@@ -939,5 +1115,22 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: moderateScale(3),
     borderRadius: moderateScale(3),
+  },
+  toolbar: {
+    // borderWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    position: 'absolute',
+    alignSelf: 'center',
+    bottom: 0,
+    width: '100%',
+    backgroundColor: 'white',
+    height: moderateScale(30),
+  },
+  toolbarButton: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 20,
+    // borderWidth: 1,
   },
 });

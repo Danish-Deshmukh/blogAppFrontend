@@ -24,9 +24,13 @@ import {
 import {ActivityIndicator} from 'react-native-paper';
 import Card from '../components/Card';
 import {moderateScale, verticalScale} from 'react-native-size-matters';
+import Modal from 'react-native-modal';
+
+// Icons
 import FoundationIcon from 'react-native-vector-icons/Foundation';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import Feather from 'react-native-vector-icons/Feather';
+
 import {
   useFocusEffect,
   useNavigation,
@@ -38,6 +42,7 @@ export default function Home() {
   const {isAdmin, userInfo, REST_API_BASE_URL} = useContext(AuthContext);
   const navigation = useNavigation();
 
+  const [showMenuModel, setShowMenuModel] = useState(false);
   const scrollConst = moderateScale(100);
   const scrollY = new Animated.Value(0);
   const diffclamp = Animated.diffClamp(scrollY, 0, scrollConst);
@@ -203,42 +208,88 @@ export default function Home() {
             </Text>
           </View>
 
+          {/* Three Dots menu Button */}
           <View
             style={{
               flexDirection: 'row',
-              justifyContent: 'space-between',
+              justifyContent: 'flex-end',
               // borderWidth: 1,
               width: '40%',
             }}>
-            {/* ADD URL Button here */}
-            <TouchableOpacity
-              onPress={() => navigation.navigate('AddUrlScreen')}
-              style={{
-                borderWidth: 1,
-                width: '40%',
-                justifyContent: 'center',
-                alignItems: 'center',
-                borderRadius: moderateScale(10),
-              }}>
-              <Text>Add url</Text>
-            </TouchableOpacity>
-
-            {/* REFRESH BUTTON */}
             <TouchableOpacity
               onPress={() => {
-                Refresh();
-                console.log('refresh called');
-              }}
-              style={{
-                marginRight: moderateScale(10),
+                setShowMenuModel(true);
               }}>
-              <FoundationIcon
-                name={'refresh'}
-                size={moderateScale(30)}
+              <Feather
+                name={'more-vertical'}
+                size={moderateScale(22)}
                 color="black"
               />
             </TouchableOpacity>
           </View>
+          {/* Three Dots menu Model*/}
+          <Modal
+            isVisible={showMenuModel}
+            onBackdropPress={() => setShowMenuModel(false)}
+            animationIn={'fadeInRight'}
+            animationOut={'fadeOutRight'}
+            backdropOpacity={0}>
+            <View
+              style={{
+                minHeight: moderateScale(100),
+                width: moderateScale(140),
+                position: 'absolute',
+                top: -10,
+                right: -10,
+                backgroundColor: 'black',
+                borderRadius: moderateScale(10),
+                elevation: 10,
+              }}>
+              {/* REFRESH BUTTON */}
+              <TouchableOpacity
+                onPress={() => {
+                  setShowMenuModel(false);
+                  Refresh();
+                }}
+                style={{
+                  width: '100%',
+                  height: '50%',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                <Text
+                  style={{color: 'white', fontWeight: 'bold', fontSize: 20}}>
+                  Refresh
+                </Text>
+              </TouchableOpacity>
+
+              {/* Divider */}
+              <View
+                style={{backgroundColor: 'white', width: '100%', height: 1}}
+              />
+
+              {/* ADD URL Button here */}
+              <TouchableOpacity
+                onPress={() => {
+                  setShowMenuModel(false);
+                  navigation.navigate('AddUrlScreen');
+                }}
+                style={{
+                  borderBottomWidth: 1,
+                  borderColor: 'white',
+                  width: '100%',
+                  height: '50%',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  // borderRadius: moderateScale(10),
+                }}>
+                <Text
+                  style={{color: 'white', fontWeight: 'bold', fontSize: 20}}>
+                  Add url
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </Modal>
         </View>
 
         {/* CATEGORYS */}

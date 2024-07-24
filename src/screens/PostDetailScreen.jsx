@@ -13,14 +13,15 @@ import {
 import React, {useContext, useEffect, useMemo, useRef, useState} from 'react';
 import {moderateScale, verticalScale} from 'react-native-size-matters';
 import {useNavigation} from '@react-navigation/native';
+import Modal from 'react-native-modal';
 
 // ICONS
 import FeatherIcons from 'react-native-vector-icons/Feather';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import Feather from 'react-native-vector-icons/Feather';
 
 import axios from 'axios';
 import {AuthContext} from '../context/AuthContext';
-import {Menu, Divider, Button} from 'react-native-paper';
 import {useQuery, useQueryClient} from '@tanstack/react-query';
 import {pageNotFoundError, tockenExpire} from '../CustomeError/Error';
 import ImageView from 'react-native-image-viewing';
@@ -35,6 +36,7 @@ export default function PostDetailScreen(item) {
   const navigation = useNavigation();
   const client = useQueryClient();
 
+  const [showMenuModel, setShowMenuModel] = useState(false);
   const scrollConst = verticalScale(90);
   const scrollY = new Animated.Value(0);
   const diffclamp = Animated.diffClamp(scrollY, 0, scrollConst);
@@ -42,11 +44,6 @@ export default function PostDetailScreen(item) {
     inputRange: [0, scrollConst],
     outputRange: [0, -scrollConst],
   });
-
-  // Papaer UI state and functions
-  const [visible, setVisible] = useState(true);
-  const openMenu = () => setVisible(true);
-  const closeMenu = () => setVisible(false);
 
   // Get Post BY id
   const fetchPostById = async id => {
@@ -108,7 +105,6 @@ export default function PostDetailScreen(item) {
   const updatePost = () => {
     navigation.navigate('AddBlog', post);
     Refresh();
-    setVisible(false);
   };
   const deletePost = () => {
     console.log('delete called');
@@ -229,7 +225,14 @@ export default function PostDetailScreen(item) {
           </Text>
         </TouchableOpacity>
 
-        <View style={{flexDirection: 'row'}}>
+        <View
+          style={{
+            flexDirection: 'row',
+            // borderWidth: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: 30,
+          }}>
           {/* COMMENT ICON HERE */}
           <TouchableOpacity
             style={{
@@ -241,6 +244,7 @@ export default function PostDetailScreen(item) {
             }}
             onPress={() => {
               navigation.navigate('ShowPostComments', post.id);
+              // setShowMenuModel(true);
               // handleOpenPress();
               // getAllComments();
             }}>
@@ -251,57 +255,72 @@ export default function PostDetailScreen(item) {
             />
           </TouchableOpacity>
 
+          {/* Three dot menu */}
           {/* UPDATE AND DELETE USER */}
           {isAdmin && (
-            <View style={{marginLeft: moderateScale(5)}}>
-              <Menu
-                visible={visible}
-                onDismiss={closeMenu}
-                anchor={
-                  <Button onPress={openMenu}>
-                    <FeatherIcons
-                      name={'more-vertical'}
-                      size={moderateScale(21)}
-                      color="black"
-                    />
-                  </Button>
-                }>
+            <>
+              {/* Three dot menu button */}
+              <View style={{marginLeft: moderateScale(5)}}>
+                <TouchableOpacity
+                  onPress={() => {
+                    setShowMenuModel(true);
+                  }}>
+                  <Feather
+                    name={'more-vertical'}
+                    size={moderateScale(22)}
+                    color="black"
+                  />
+                </TouchableOpacity>
+              </View>
+              {/* Model for Three dot menu */}
+              <Modal
+                isVisible={showMenuModel}
+                onBackdropPress={() => setShowMenuModel(false)}
+                animationIn={'fadeInRight'}
+                animationOut={'fadeOutRight'}
+                backdropOpacity={0}>
                 <View
                   style={{
-                    backgroundColor: '#f0f0f0',
+                    minHeight: moderateScale(100),
+                    width: moderateScale(140),
+                    position: 'absolute',
+                    top: -10,
+                    right: -10,
+                    backgroundColor: 'black',
+                    borderRadius: moderateScale(10),
+                    elevation: 10,
                   }}>
-                  <Menu.Item
+                  {/* REFRESH BUTTON */}
+                  <TouchableOpacity
                     onPress={() => {
+                      setShowMenuModel(false);
                       updatePost();
                     }}
-                    title={
-                      <View
-                        style={{
-                          // borderWidth: 1,
-                          // padding: moderateScale(10),
-                          flexDirection: 'row',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                        }}>
-                        <MaterialCommunityIcons
-                          name={'update'}
-                          size={moderateScale(20)}
-                          color="black"
-                        />
-                        <Text
-                          style={{
-                            marginLeft: moderateScale(10),
-                            fontWeight: '600',
-                            fontSize: moderateScale(16),
-                          }}>
-                          UPDATE
-                        </Text>
-                      </View>
-                    }
+                    style={{
+                      width: '100%',
+                      height: '50%',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}>
+                    <Text
+                      style={{
+                        color: 'lightgreen',
+                        fontWeight: 'bold',
+                        fontSize: 17,
+                      }}>
+                      UPDATE
+                    </Text>
+                  </TouchableOpacity>
+
+                  {/* Divider */}
+                  <View
+                    style={{backgroundColor: 'white', width: '100%', height: 1}}
                   />
-                  <Divider />
-                  <Menu.Item
+
+                  {/* ADD URL Button here */}
+                  <TouchableOpacity
                     onPress={() => {
+                      setShowMenuModel(false);
                       Alert.alert(
                         'Delete Post',
                         'Are you sure you want to Delete this post',
@@ -319,35 +338,23 @@ export default function PostDetailScreen(item) {
                         ],
                       );
                     }}
-                    title={
-                      <View
-                        style={{
-                          // borderWidth: 1,
-                          // padding: moderateScale(10),
-                          flexDirection: 'row',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                        }}>
-                        <MaterialCommunityIcons
-                          name={'delete'}
-                          size={moderateScale(20)}
-                          color="black"
-                        />
-                        <Text
-                          style={{
-                            marginLeft: moderateScale(10),
-                            fontWeight: '600',
-                            fontSize: moderateScale(16),
-                            color: 'tomato',
-                          }}>
-                          DELETE
-                        </Text>
-                      </View>
-                    }
-                  />
+                    style={{
+                      // borderBottomWidth: 1,
+                      borderColor: 'white',
+                      width: '100%',
+                      height: '50%',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      // borderRadius: moderateScale(10),
+                    }}>
+                    <Text
+                      style={{color: 'pink', fontWeight: 'bold', fontSize: 17}}>
+                      DELETE
+                    </Text>
+                  </TouchableOpacity>
                 </View>
-              </Menu>
-            </View>
+              </Modal>
+            </>
           )}
         </View>
       </Animated.View>

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import React, {useContext, useState} from 'react';
 import {moderateScale, verticalScale} from 'react-native-size-matters';
+import Modal from 'react-native-modal';
 
 // ICONS
 import FeatherIcons from 'react-native-vector-icons/Feather';
@@ -23,8 +24,9 @@ import {AuthContext} from '../context/AuthContext';
 import {ActivityIndicator, Menu} from 'react-native-paper';
 import {pageNotFoundError, tockenExpire} from '../CustomeError/Error';
 
-const ShowPostComments = item => {
-  const id = item.route.params;
+const ShowPostComments = ({item}) => {
+  const id = item;
+  console.log('item ' + item);
   const {isAdmin, userInfo, logout, REST_API_BASE_URL} =
     useContext(AuthContext);
   const navigation = useNavigation();
@@ -190,14 +192,14 @@ const ShowPostComments = item => {
   return (
     <View
       style={{
-        marginBottom: moderateScale(150),
+        // marginBottom: moderateScale(150),
         flex: 1,
         backgroundColor: 'white',
-        paddingBottom: 40,
+        paddingBottom: 70,
         // borderWidth: 1
       }}>
       {/* Comments header */}
-      <View style={styles.commentsHeadContainer}>
+      {/* <View style={styles.commentsHeadContainer}>
         <Text
           style={{
             fontSize: moderateScale(20),
@@ -206,10 +208,14 @@ const ShowPostComments = item => {
           }}>
           Comments
         </Text>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity
+          onPress={() => {
+            setShowComments(false);
+            // navigation.goBack();
+          }}>
           <AntDesign name={'close'} size={moderateScale(30)} color="black" />
         </TouchableOpacity>
-      </View>
+      </View> */}
 
       {/* Comment Input */}
       <View
@@ -324,33 +330,36 @@ const ShowPostComments = item => {
                     position: 'absolute',
                     right: moderateScale(10),
                     top: moderateScale(10),
-                    // borderWidth: 1,
                     borderRadius: moderateScale(15),
                     width: moderateScale(30),
                     height: moderateScale(30),
                     justifyContent: 'center',
                     alignItems: 'center',
-                    // padding: moderateScale(15)
                   }}>
-                  <Menu
-                    visible={menuVisible[item.id] || false}
-                    onDismiss={() => closeMenu(item.id)}
-                    anchor={
-                      // There dote vertival icon here
-                      <TouchableOpacity onPress={() => openMenu(item.id)}>
-                        <FeatherIcons
-                          name={'more-vertical'}
-                          size={moderateScale(21)}
-                          color="black"
-                        />
-                      </TouchableOpacity>
-                    }>
+                  <TouchableOpacity onPress={() => openMenu(item.id)}>
+                    <FeatherIcons
+                      name={'more-vertical'}
+                      size={moderateScale(21)}
+                      color="black"
+                    />
+                  </TouchableOpacity>
+                  <Modal
+                    isVisible={menuVisible[item.id] || false}
+                    onBackdropPress={() => closeMenu(item.id)}
+                    
+                    style={{
+                      margin: 0,
+                      justifyContent: 'flex-end',
+                    }}>
                     <View
                       style={{
                         backgroundColor: '#f0f0f0',
+                        padding: moderateScale(30),
+                        borderRadius: moderateScale(10),
+                        gap: 20,
                       }}>
                       {userInfo.name === item.name && (
-                        <Menu.Item
+                        <TouchableOpacity
                           onPress={() => {
                             const UpdatingCommentUser = {
                               commentId: item.id,
@@ -362,38 +371,32 @@ const ShowPostComments = item => {
                             closeMenu(item.id);
                             setComment(item.body);
                           }}
-                          title={
-                            <View
-                              style={{
-                                // borderWidth: 1,
-                                // padding: moderateScale(10),
-                                flexDirection: 'row',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                              }}>
-                              <MaterialCommunityIcons
-                                name={'square-edit-outline'}
-                                size={moderateScale(20)}
-                                color="black"
-                              />
-                              <Text
-                                style={{
-                                  marginLeft: moderateScale(10),
-                                  fontWeight: '600',
-                                  fontSize: moderateScale(16),
-                                  color: 'green',
-                                }}>
-                                Edit
-                              </Text>
-                            </View>
-                          }
-                        />
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            marginBottom: moderateScale(10),
+                          }}>
+                          <MaterialCommunityIcons
+                            name={'square-edit-outline'}
+                            size={moderateScale(20)}
+                            color="black"
+                          />
+                          <Text
+                            style={{
+                              marginLeft: moderateScale(10),
+                              fontWeight: '600',
+                              fontSize: moderateScale(16),
+                              color: 'green',
+                            }}>
+                            Edit
+                          </Text>
+                        </TouchableOpacity>
                       )}
-                      <Menu.Item
+                      <TouchableOpacity
                         onPress={() => {
                           Alert.alert(
                             'Delete Comment',
-                            'Are you sure you want to Delete this Comment',
+                            'Are you sure you want to delete this comment?',
                             [
                               {
                                 text: 'Cancel',
@@ -408,34 +411,27 @@ const ShowPostComments = item => {
                             ],
                           );
                         }}
-                        title={
-                          <View
-                            style={{
-                              // borderWidth: 1,
-                              // padding: moderateScale(10),
-                              flexDirection: 'row',
-                              justifyContent: 'space-between',
-                              alignItems: 'center',
-                            }}>
-                            <MaterialCommunityIcons
-                              name={'delete'}
-                              size={moderateScale(20)}
-                              color="black"
-                            />
-                            <Text
-                              style={{
-                                marginLeft: moderateScale(10),
-                                fontWeight: '600',
-                                fontSize: moderateScale(16),
-                                color: 'tomato',
-                              }}>
-                              DETELE
-                            </Text>
-                          </View>
-                        }
-                      />
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                        }}>
+                        <MaterialCommunityIcons
+                          name={'delete'}
+                          size={moderateScale(20)}
+                          color="black"
+                        />
+                        <Text
+                          style={{
+                            marginLeft: moderateScale(10),
+                            fontWeight: '600',
+                            fontSize: moderateScale(16),
+                            color: 'tomato',
+                          }}>
+                          Delete
+                        </Text>
+                      </TouchableOpacity>
                     </View>
-                  </Menu>
+                  </Modal>
                 </View>
               )}
 

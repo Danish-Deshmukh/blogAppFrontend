@@ -19,6 +19,7 @@ import Modal from 'react-native-modal';
 import FeatherIcons from 'react-native-vector-icons/Feather';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Feather from 'react-native-vector-icons/Feather';
+import AntDesign from 'react-native-vector-icons/AntDesign';
 
 import axios from 'axios';
 import {AuthContext} from '../context/AuthContext';
@@ -26,6 +27,7 @@ import {useQuery, useQueryClient} from '@tanstack/react-query';
 import {pageNotFoundError, tockenExpire} from '../CustomeError/Error';
 import ImageView from 'react-native-image-viewing';
 import Markdown from 'react-native-markdown-display';
+import ShowPostComments from './ShowPostComments';
 
 export default function PostDetailScreen(item) {
   const post = item.route.params;
@@ -44,6 +46,8 @@ export default function PostDetailScreen(item) {
     inputRange: [0, scrollConst],
     outputRange: [0, -scrollConst],
   });
+
+  const [showComments, setShowComments] = useState(false);
 
   // Get Post BY id
   const fetchPostById = async id => {
@@ -243,8 +247,8 @@ export default function PostDetailScreen(item) {
               zIndex: 2,
             }}
             onPress={() => {
-              navigation.navigate('ShowPostComments', post.id);
-              // setShowMenuModel(true);
+              // navigation.navigate('ShowPostComments', post.id);
+              setShowComments(true);
               // handleOpenPress();
               // getAllComments();
             }}>
@@ -358,6 +362,54 @@ export default function PostDetailScreen(item) {
           )}
         </View>
       </Animated.View>
+
+      <Modal
+        isVisible={showComments}
+        onBackdropPress={() => setShowComments(false)}
+        // animationIn={''}
+        // animationOut={'fadeOutRight'}
+        // backdropOpacity={0}
+      >
+        <View
+          style={{
+            // flex: 1,
+            height: '100%',
+            position: 'absolute',
+            bottom: -20,
+            backgroundColor: 'white',
+            width: '110%',
+            alignSelf: 'center',
+            borderRadius: moderateScale(20),
+            paddingTop: moderateScale(5),
+            // paddingBottom: moderateScale(30)
+          }}>
+          {/* Comments header */}
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              paddingHorizontal: moderateScale(10),
+            }}>
+            <Text
+              style={{
+                fontSize: moderateScale(20),
+                color: 'black',
+                fontWeight: '700',
+              }}>
+              Comments
+            </Text>
+            <TouchableOpacity onPress={() => setShowComments(false)}>
+              <AntDesign
+                name={'close'}
+                size={moderateScale(30)}
+                color="black"
+              />
+            </TouchableOpacity>
+          </View>
+          <ShowPostComments item={post.id} setShowComments={showComments} />
+        </View>
+      </Modal>
 
       {/* POST DETAILS */}
       <ScrollView

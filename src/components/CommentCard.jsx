@@ -224,4 +224,4 @@ const CommentCard = ({id, item}) => {
 
 export default CommentCard;
 
-const styles = StyleSheet.create({});
+

@@ -365,6 +365,7 @@ export default function PostDetailScreen(item) {
 
       <Modal
         isVisible={showComments}
+        onBackButtonPress={() => setShowComments(false)}
         onBackdropPress={() => setShowComments(false)}
         // animationIn={''}
         // animationOut={'fadeOutRight'}

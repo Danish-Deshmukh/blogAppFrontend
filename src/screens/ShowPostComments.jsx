@@ -86,7 +86,7 @@ const ShowPostComments = ({item}) => {
     return json;
   };
   const {
-    data: comments,
+    data,
     error: commentsError,
     isLoading: commentsLoading,
   } = useQuery({
@@ -306,78 +306,128 @@ const ShowPostComments = ({item}) => {
             <ActivityIndicator color="black" />
           </View>
         )}
-        <FlatList
-          showsVerticalScrollIndicator={false}
-          data={comments}
-          keyExtractor={item => item.id.toString()}
-          renderItem={({item}) => (
-            // Comment Card
-            <View
-              style={{
-                backgroundColor: userInfo.name === item.name && 'lightgreen',
-                borderWidth: 0.4,
-                borderRadius: moderateScale(10),
-                flexDirection: 'row',
-                marginVertical: moderateScale(5),
-                paddingVertical: moderateScale(15),
-                paddingRight: moderateScale(65),
-                // marginBottom: moderateScale(120)
-              }}>
-              {/* Three dots for more options */}
-              {(userInfo.name === item.name || isAdmin) && (
-                <View
-                  style={{
-                    position: 'absolute',
-                    right: moderateScale(10),
-                    top: moderateScale(10),
-                    borderRadius: moderateScale(15),
-                    width: moderateScale(30),
-                    height: moderateScale(30),
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                  }}>
-                  <TouchableOpacity onPress={() => openMenu(item.id)}>
-                    <FeatherIcons
-                      name={'more-vertical'}
-                      size={moderateScale(21)}
-                      color="black"
-                    />
-                  </TouchableOpacity>
-                  <Modal
-                    isVisible={menuVisible[item.id] || false}
-                    onBackdropPress={() => closeMenu(item.id)}
-                    
+
+        {data === undefined || data.length === 0 ? (
+          <View
+            style={{
+              height: '100%',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+            <Text>No Comments yet,</Text>
+            <Text>You can be the first one to comment</Text>
+          </View>
+        ) : (
+          <FlatList
+            showsVerticalScrollIndicator={false}
+            data={data}
+            keyExtractor={item => item.id.toString()}
+            renderItem={({item}) => (
+              // Comment Card
+              <View
+                style={{
+                  backgroundColor: userInfo.name === item.name && '#e6ffe6',
+                  borderWidth: 0.4,
+                  borderRadius: moderateScale(10),
+                  flexDirection: 'row',
+                  marginVertical: moderateScale(5),
+                  paddingVertical: moderateScale(15),
+                  paddingRight: moderateScale(65),
+                  // marginBottom: moderateScale(120)
+                }}>
+                {/* Three dots for more options */}
+                {(userInfo.name === item.name || isAdmin) && (
+                  <View
                     style={{
-                      margin: 0,
-                      justifyContent: 'flex-end',
+                      position: 'absolute',
+                      right: moderateScale(10),
+                      top: moderateScale(10),
+                      borderRadius: moderateScale(15),
+                      width: moderateScale(30),
+                      height: moderateScale(30),
+                      justifyContent: 'center',
+                      alignItems: 'center',
                     }}>
-                    <View
+                    <TouchableOpacity onPress={() => openMenu(item.id)}>
+                      <FeatherIcons
+                        name={'more-vertical'}
+                        size={moderateScale(21)}
+                        color="black"
+                      />
+                    </TouchableOpacity>
+                    <Modal
+                      isVisible={menuVisible[item.id] || false}
+                      onBackdropPress={() => closeMenu(item.id)}
                       style={{
-                        backgroundColor: '#f0f0f0',
-                        padding: moderateScale(30),
-                        borderRadius: moderateScale(10),
-                        gap: 20,
+                        margin: 0,
+                        justifyContent: 'flex-end',
                       }}>
-                      {userInfo.name === item.name && (
+                      <View
+                        style={{
+                          backgroundColor: '#f0f0f0',
+                          padding: moderateScale(30),
+                          borderRadius: moderateScale(10),
+                          gap: 20,
+                        }}>
+                        {userInfo.name === item.name && (
+                          <TouchableOpacity
+                            onPress={() => {
+                              const UpdatingCommentUser = {
+                                commentId: item.id,
+                                name: item.name,
+                                email: item.email,
+                              };
+                              setUpdatingCommentUser(UpdatingCommentUser);
+                              setUpdatingCommentInProcess(true);
+                              closeMenu(item.id);
+                              setComment(item.body);
+                            }}
+                            style={{
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              marginBottom: moderateScale(10),
+                            }}>
+                            <MaterialCommunityIcons
+                              name={'square-edit-outline'}
+                              size={moderateScale(20)}
+                              color="black"
+                            />
+                            <Text
+                              style={{
+                                marginLeft: moderateScale(10),
+                                fontWeight: '600',
+                                fontSize: moderateScale(16),
+                                color: 'green',
+                              }}>
+                              Edit
+                            </Text>
+                          </TouchableOpacity>
+                        )}
                         <TouchableOpacity
                           onPress={() => {
-                            const UpdatingCommentUser = {
-                              commentId: item.id,
-                              name: item.name,
-                              email: item.email,
-                            };
-                            setUpdatingCommentUser(UpdatingCommentUser);
-                            setUpdatingCommentInProcess(true);
-                            closeMenu(item.id);
-                            setComment(item.body);
+                            Alert.alert(
+                              'Delete Comment',
+                              'Are you sure you want to delete this comment?',
+                              [
+                                {
+                                  text: 'Cancel',
+                                  style: 'cancel',
+                                },
+                                {
+                                  text: 'OK',
+                                  onPress: () => {
+                                    deleteComment(item.id);
+                                  },
+                                },
+                              ],
+                            );
                           }}
                           style={{
                             flexDirection: 'row',
                             alignItems: 'center',
-                            marginBottom: moderateScale(10),
                           }}>
                           <MaterialCommunityIcons
-                            name={'square-edit-outline'}
+                            name={'delete'}
                             size={moderateScale(20)}
                             color="black"
                           />
@@ -386,78 +436,40 @@ const ShowPostComments = ({item}) => {
                               marginLeft: moderateScale(10),
                               fontWeight: '600',
                               fontSize: moderateScale(16),
-                              color: 'green',
+                              color: 'tomato',
                             }}>
-                            Edit
+                            Delete
                           </Text>
                         </TouchableOpacity>
-                      )}
-                      <TouchableOpacity
-                        onPress={() => {
-                          Alert.alert(
-                            'Delete Comment',
-                            'Are you sure you want to delete this comment?',
-                            [
-                              {
-                                text: 'Cancel',
-                                style: 'cancel',
-                              },
-                              {
-                                text: 'OK',
-                                onPress: () => {
-                                  deleteComment(item.id);
-                                },
-                              },
-                            ],
-                          );
-                        }}
-                        style={{
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                        }}>
-                        <MaterialCommunityIcons
-                          name={'delete'}
-                          size={moderateScale(20)}
-                          color="black"
-                        />
-                        <Text
-                          style={{
-                            marginLeft: moderateScale(10),
-                            fontWeight: '600',
-                            fontSize: moderateScale(16),
-                            color: 'tomato',
-                          }}>
-                          Delete
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  </Modal>
-                </View>
-              )}
+                      </View>
+                    </Modal>
+                  </View>
+                )}
 
-              <Image
-                source={require('../assets/images/user.png')}
-                style={{
-                  height: moderateScale(25),
-                  width: moderateScale(25),
-                  marginHorizontal: moderateScale(10),
-                  marginTop: moderateScale(3),
-                }}
-              />
-              <View>
-                <Text style={{color: 'gray'}}>{item.name}</Text>
-                <Text
+                <Image
+                  source={require('../assets/images/user.png')}
                   style={{
-                    fontSize: moderateScale(17),
-                    textAlign: 'justify',
-                    color: 'black',
-                  }}>
-                  {item.body}
-                </Text>
+                    height: moderateScale(25),
+                    width: moderateScale(25),
+                    marginHorizontal: moderateScale(10),
+                    marginTop: moderateScale(3),
+                  }}
+                />
+                <View>
+                  <Text style={{color: 'gray'}}>{item.name}</Text>
+                  <Text
+                    style={{
+                      fontSize: moderateScale(17),
+                      textAlign: 'justify',
+                      color: 'black',
+                    }}>
+                    {item.body}
+                  </Text>
+                </View>
               </View>
-            </View>
-          )}
-        />
+            )}
+          />
+        )}
       </View>
     </View>
   );

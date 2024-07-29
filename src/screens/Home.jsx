@@ -303,7 +303,7 @@ export default function Home() {
           {categoriesIsLoading && (
             // Loading Category skeleton
             <FlatList
-              // scrollEnabled={false}
+              scrollEnabled={false}
               horizontal={true}
               showsHorizontalScrollIndicator={false}
               data={[1, 1, 1, 1, 1, 1]}
@@ -420,7 +420,7 @@ export default function Home() {
             width: '100%',
           }}>
           <FlatList
-            // scrollEnabled={false}
+            scrollEnabled={false}
             data={[1, 1, 1, 1, 1]}
             showsVerticalScrollIndicator={false}
             ListHeaderComponent={() => (
@@ -534,7 +534,7 @@ export default function Home() {
       {isAdmin && (
         <TouchableOpacity
           onPress={() => {
-            navigation.navigate('AddBlog');
+            navigation.navigate('AddConent');
           }}
           style={{
             position: 'absolute',

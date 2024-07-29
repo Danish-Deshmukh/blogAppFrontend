@@ -84,6 +84,11 @@ const AddBlog = item => {
     insertText('\n``` \n', '\n \n```\n');
   };
 
+  // const [selectImage, setSelectImage] = useState(false);
+  const handleImages = () => {
+    console.log('handle iimage called');
+  };
+
   // QUERY AND STATES FOR FETCHING CATEGORIES
   const [showCategoryMenu, setShowCategoryMenu] = useState(false);
   const [editCategory, setEditCategory] = useState(false);
@@ -134,18 +139,17 @@ const AddBlog = item => {
     setCategoryId(null);
   };
   let userSchema = Yup.object().shape({
-    title: Yup.string()
-      .required('Please Enter Title')
-      .min(3, 'Title must be 3 or more charactors')
-      .max(150, 'Title must be less then 150 charactors'),
-    description: Yup.string()
-      .required('Please Enter Description')
-      .min(5, 'description should be 15 or more charactors')
-      .max(250, 'Description must be less then 250 charactors'),
-    content: Yup.string()
-      .required('Please Enter Content')
-      .min(10, 'content should not be less then 10 charactors'),
-    categoryId: Yup.number().required('Please Select Category'),
+    // title: Yup.string()
+    //   .required('Please Enter Title')
+    //   .min(3, 'Title must be 3 or more charactors')
+    //   .max(150, 'Title must be less then 150 charactors'),
+    // description: Yup.string()
+    //   .required('Please Enter Description')
+    //   .min(5, 'description should be 15 or more charactors')
+    //   .max(250, 'Description must be less then 250 charactors'),
+    content: Yup.string().required('Please Enter Content'),
+    // .min(10, 'content should not be less then 10 charactors'),
+    // categoryId: Yup.number().required('Please Select Category'),
   });
 
   const nextPage = async () => {
@@ -155,7 +159,11 @@ const AddBlog = item => {
       // console.log('inside the try block');
       // Awaiting for Yup to validate text
       await userSchema.validate(
-        {title, description, content, categoryId},
+        {
+          // title, description,
+          content,
+          // categoryId
+        },
         {abortEarly: false},
       );
 
@@ -217,55 +225,55 @@ const AddBlog = item => {
     setCategory(json);
   };
 
-  // const submitPost = () => {
-  //   console.log('title : ' + title);
-  //   console.log('descriptiton : ' + description);
-  //   console.log('content : ' + content);
-  //   console.log('categoryId : ' + categoryId);
+  const submitPost = () => {
+    console.log('title : ' + title);
+    console.log('descriptiton : ' + description);
+    console.log('content : ' + content);
+    console.log('categoryId : ' + categoryId);
 
-  //   console.log('submit button called');
-  //   console.log(REST_API_BASE_URL);
+    console.log('submit button called');
+    console.log(REST_API_BASE_URL);
 
-  //   const formData = new FormData();
-  //   const image = imageDetail;
+    const formData = new FormData();
+    const image = imageDetail;
 
-  //   formData.append('file', {
-  //     uri: image.assets?.[0]?.uri,
-  //     type: image.assets?.[0]?.type,
-  //     name: image.assets?.[0]?.fileName,
-  //     fileName: image.assets?.[0]?.fileName,
-  //   });
+    formData.append('file', {
+      uri: image.assets?.[0]?.uri,
+      type: image.assets?.[0]?.type,
+      name: image.assets?.[0]?.fileName,
+      fileName: image.assets?.[0]?.fileName,
+    });
 
-  //   const postDto = JSON.stringify({
-  //     title: title,
-  //     description: description,
-  //     content: content,
-  //     categoryId: categoryId,
-  //   });
+    const postDto = JSON.stringify({
+      title: title,
+      description: description,
+      content: content,
+      categoryId: categoryId,
+    });
 
-  //   formData.append('postDto', postDto);
+    formData.append('postDto', postDto);
 
-  //   axios
-  //     .post(`${REST_API_BASE_URL}/posts`, formData, config)
-  //     .then(res => {
-  //       console.log(res);
-  //       Refresh();
-  //       ClearDataFromUI();
-  //       navigation.navigate('Home');
-  //     })
-  //     .catch(e => {
-  //       console.log(`error------------> ${e}`);
+    axios
+      .post(`${REST_API_BASE_URL}/posts`, formData, config)
+      .then(res => {
+        console.log(res);
+        Refresh();
+        ClearDataFromUI();
+        navigation.navigate('Home');
+      })
+      .catch(e => {
+        console.log(`error------------> ${e}`);
 
-  //       console.log(e.response.status);
-  //       if (e.response.status === 404) {
-  //         pageNotFoundError();
-  //       }
+        console.log(e.response.status);
+        if (e.response.status === 404) {
+          pageNotFoundError();
+        }
 
-  //       if (e.response.status === 401) {
-  //         tockenExpire();
-  //       }
-  //     });
-  // };
+        if (e.response.status === 401) {
+          tockenExpire();
+        }
+      });
+  };
   const updatePost = (title, description, content) => {
     console.log('Update method called');
     const ID = post.id;
@@ -596,252 +604,9 @@ const AddBlog = item => {
               )}
             </View>
 
-            {/* Category Select related container */}
             <View>
-              {/* Create or Select category  */}
-              <Pressable
-                onPress={() => setShowCategoryMenu(true)}
-                style={{
-                  width: '100%',
-                  height: moderateScale(35),
-                  borderWidth: 1,
-                  borderColor: errors.categoryId ? 'red' : 'black',
-                  borderRadius: moderateScale(5),
-                  alignItems: 'center',
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  paddingHorizontal: moderateScale(10),
-                  marginBottom: moderateScale(10),
-                }}>
-                {category === null ? (
-                  <Text># Select category</Text>
-                ) : (
-                  <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                    <Text># Selected category is : </Text>
-                    <View
-                      style={{
-                        borderWidth: 0.8,
-                        borderColor: 'black',
-                        paddingVertical: moderateScale(4),
-                        paddingHorizontal: moderateScale(10),
-                        borderRadius: moderateScale(10),
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        backgroundColor: 'black',
-                      }}>
-                      <Text
-                        style={{
-                          fontWeight: '600',
-                          color: 'white',
-                        }}>
-                        {category.name}
-                      </Text>
-                    </View>
-                  </View>
-                )}
-                <View
-                  style={{
-                    // borderWidth: 1,
-                    height: moderateScale(30),
-                    width: moderateScale(30),
-                    borderRadius: moderateScale(15),
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    // backgroundColor: 'white',
-                  }}>
-                  <MaterialCommunityIcons
-                    name={'menu-down'}
-                    size={moderateScale(29)}
-                    color="black"
-                  />
-                </View>
-              </Pressable>
-              {/* Show Category Menu container */}
-              <Modal
-                isVisible={showCategoryMenu}
-                transparent={true}
-                // visible={showCategoryMenu}
-                onBackdropPress={() => setShowCategoryMenu(false)}>
-                <View
-                  style={{
-                    backgroundColor: 'white',
-                    elevation: 20,
-                    paddingHorizontal: 10,
-                    borderRadius: 20,
-                  }}>
-                  {/* Close Button */}
-                  <View
-                    style={{
-                      // backgroundColor: 'blue',
-                      height: moderateScale(40),
-                      alignItems: 'flex-end',
-                      // borderWidth: 1,
-                    }}>
-                    <TouchableOpacity
-                      onPress={() => {
-                        setShowCategoryMenu(false);
-                      }}
-                      style={{
-                        // borderWidth: 1,
-                        height: moderateScale(40),
-                        width: moderateScale(40),
-                        borderRadius: moderateScale(20),
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                      }}>
-                      <AntDesign
-                        name={'close'}
-                        size={moderateScale(25)}
-                        color="gray"
-                      />
-                    </TouchableOpacity>
-                  </View>
-
-                  {/* Add Category Button */}
-                  <Pressable
-                    onPress={() => {
-                      setShowCategoryMenu(false);
-                      navigation.navigate('AddCategory');
-                    }}
-                    style={{
-                      borderWidth: 0.5,
-                      borderColor: 'green',
-                      borderRadius: moderateScale(10),
-                      height: moderateScale(35),
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      alignSelf: 'flex-start',
-                      gap: moderateScale(10),
-                      paddingHorizontal: moderateScale(10),
-                      marginHorizontal: moderateScale(10),
-                    }}>
-                    <Ionicons
-                      name={'add-circle-outline'}
-                      size={moderateScale(25)}
-                      // color="black"
-                    />
-
-                    <Text
-                      style={{
-                        fontSize: moderateScale(15),
-                        fontWeight: 'bold',
-                        // color: 'black',
-                      }}>
-                      ADD New Category
-                    </Text>
-                  </Pressable>
-
-                  {/* Select Category Option */}
-                  <View
-                    style={{
-                      width: '100%',
-                      height: '70%',
-                    }}>
-                    <View
-                      style={{
-                        padding: moderateScale(10),
-                        // borderWidth: 1,
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                      }}>
-                      <Text
-                        style={{
-                          fontSize: moderateScale(20),
-                          fontWeight: 'bold',
-                        }}>
-                        Select Category
-                      </Text>
-
-                      <TouchableOpacity
-                        onPress={() => {
-                          setEditCategory(!editCategory);
-                          setCategory(null);
-                          setCategoryId();
-                        }}
-                        style={{
-                          borderWidth: 1,
-                          borderColor: 'gray',
-                          padding: moderateScale(5),
-                          paddingHorizontal: moderateScale(10),
-                          borderRadius: moderateScale(10),
-                          backgroundColor: editCategory ? 'lightgreen' : null,
-                        }}>
-                        <Text style={styles.commontSmallText}>Edit</Text>
-                      </TouchableOpacity>
-                    </View>
-
-                    <FlatList
-                      verticalScale={true}
-                      numColumns={3}
-                      alignSelf={'center'}
-                      data={categories}
-                      keyExtractor={item => item.id.toString()}
-                      renderItem={({item}) =>
-                        item.id === 1 ? null : (
-                          <TouchableOpacity
-                            onPress={() => {
-                              if (editCategory) {
-                                setShowCategoryMenu(false);
-                                navigation.navigate('AddCategory', item);
-                              } else {
-                                id = item.id;
-                                setCategoryId(id);
-                                setCategory(item);
-                                console.log('name : ' + item.name);
-                                setShowCategoryMenu(false);
-                              }
-                            }}
-                            style={{
-                              borderWidth: 0.8,
-                              borderColor: 'black',
-                              paddingVertical: moderateScale(6),
-                              paddingHorizontal: moderateScale(15),
-                              margin: moderateScale(4),
-                              marginTop: moderateScale(9),
-                              borderRadius: moderateScale(10),
-                              justifyContent: 'center',
-                              alignItems: 'center',
-                              backgroundColor:
-                                categoryId === item.id ? 'black' : 'white',
-                            }}>
-                            {editCategory && (
-                              <View
-                                style={{
-                                  borderWidth: 1,
-                                  borderColor: 'green',
-                                  backgroundColor: 'green',
-                                  height: moderateScale(10),
-                                  width: moderateScale(10),
-                                  borderRadius: moderateScale(5),
-                                  position: 'absolute',
-                                  right: 2,
-                                  top: 2,
-                                }}
-                              />
-                            )}
-                            <Text
-                              style={{
-                                fontWeight: '600',
-                                color:
-                                  categoryId === item.id ? 'white' : 'black',
-                              }}>
-                              {item.name}
-                            </Text>
-                          </TouchableOpacity>
-                        )
-                      }
-                    />
-                  </View>
-                </View>
-              </Modal>
-              {errors.categoryId && (
-                <Text style={styles.errorText}>{errors.categoryId}</Text>
-              )}
-            </View>
-
-            <View>
-              <View style={styles.CommonClearContainer}>
+              {/* Title */}
+              {/* <View style={styles.CommonClearContainer}>
                 <Text style={styles.titleText}>Title : </Text>
                 <TouchableOpacity
                   onPress={() => {
@@ -875,10 +640,10 @@ const AddBlog = item => {
               />
               {errors.title && (
                 <Text style={styles.errorText}>{errors.title}</Text>
-              )}
+              )} */}
 
               {/* Description */}
-              <View style={styles.CommonClearContainer}>
+              {/* <View style={styles.CommonClearContainer}>
                 <Text style={styles.descriptionText}>Description : </Text>
                 <TouchableOpacity
                   onPress={() => {
@@ -913,7 +678,7 @@ const AddBlog = item => {
               />
               {errors.description && (
                 <Text style={styles.errorText}>{errors.description}</Text>
-              )}
+              )} */}
 
               {/* Content */}
               <View
@@ -1028,7 +793,11 @@ const AddBlog = item => {
               color="black"
             />
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleCode} style={styles.toolbarButton}>
+          <TouchableOpacity
+            onPress={() => {
+              handleImages();
+            }}
+            style={styles.toolbarButton}>
             <FeatherIcons
               name={'image'}
               size={moderateScale(22)}

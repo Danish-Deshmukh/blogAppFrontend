@@ -204,6 +204,7 @@ export default function Navigation() {
           component={AddContent}
           options={{
             headerShown: false,
+            animation: 'slide_from_right'
           }}
         />
         <NativeSTACK.Screen

@@ -1,22 +1,41 @@
 import {
   Alert,
   Animated,
-  Button,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
   Pressable,
+  FlatList,
+  Image,
+  ToastAndroid,
 } from 'react-native';
-import React, {useState} from 'react';
+import Modal from 'react-native-modal';
+import React, {useContext, useState} from 'react';
 import FeatherIcons from 'react-native-vector-icons/Feather';
+import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import * as Yup from 'yup';
 import {moderateScale, verticalScale} from 'react-native-size-matters';
 import {GestureHandlerRootView, ScrollView} from 'react-native-gesture-handler';
 import {useNavigation} from '@react-navigation/native';
+
+// Icons
+import AntDesign from 'react-native-vector-icons/AntDesign';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import WhiteButton from '../components/WhiteButton';
+import BlackButton from '../components/BlackButton';
+import {launchImageLibrary} from 'react-native-image-picker';
+import FitImage from 'react-native-fit-image';
+import WhiteButtonLoading from '../components/WhiteButtonLoading';
+import {AuthContext} from '../context/AuthContext';
+import axios from 'axios';
+
 const AddContent = () => {
   const navigation = useNavigation();
+  const {userInfo, logout, REST_API_BASE_URL} = useContext(AuthContext);
   const scrollConst = verticalScale(50);
   const scrollY = new Animated.Value(0);
   const diffclamp = Animated.diffClamp(scrollY, 0, scrollConst);
@@ -27,6 +46,7 @@ const AddContent = () => {
 
   const [errors, setErrors] = useState({});
   const [content, setContent] = useState('');
+  const [swapToolbar, setSwapToolbar] = useState(true);
   const [selection, setSelection] = useState({start: 0, end: 0});
   const insertText = (prefix, suffix = '') => {
     const start = content.slice(0, selection.start);
@@ -49,21 +69,188 @@ const AddContent = () => {
   const handleList = () => {
     insertText('\n-  \n-  \n-  ');
   };
-  const handleLink = () => {
-    insertText('\n-  \n-  \n-  ');
+
+  const handleOlList = () => {
+    insertText('\n1.  \n2.  \n3.  \n4.  ');
   };
+
   const handleSubHeading = () => {
     insertText('## ');
   };
   const handleCode = () => {
     insertText('\n``` \n', '\n \n```\n');
   };
+
+  const [selectLinkModel, setSelectLinkModel] = useState(false);
+  const [linkText, setLinkText] = useState('');
+  const [link, setLink] = useState('');
+  const [linkError, setLinkError] = useState(false);
+  const handleLink = (text, link) => {
+    if (text === undefined || text === '' || text === null) {
+      text = 'Demo';
+    }
+    insertText(`[${text}](${link})`);
+  };
+
+  // Select Image
+  const [selectImageModel, setSelectImageModel] = useState(false);
+  const handleImages = item => {
+    insertText(`![Image name](${item})`);
+  };
+  // Upload Image
+  const [uploadImageModel, setUploadImageModel] = useState(false);
+  const [uploadImageLoading, setUploadImageLoading] = useState(false);
+  // Add image states and functions
+  const [image, setImage] = useState('');
+  const [imageDetail, setImageDetails] = useState(null);
+  const [images, setImages] = useState([]);
+  console.log(images);
+  const [imagesForUpload, setImagesForUpload] = useState([]);
+  const openImagePicker = async () => {
+    const options = {
+      title: 'Select Image',
+      type: 'library',
+      options: {
+        mediaType: 'photo',
+        includeBase64: false,
+        maxHeight: 2000,
+        maxWidth: 2000,
+        selectionLimit: 1,
+      },
+    };
+
+    const image = await launchImageLibrary(options);
+    let imageUri = image.uri || image.assets?.[0]?.uri;
+
+    if (image.didCancel === true) {
+      setImage('');
+      setImageDetails(null);
+    } else {
+      setImage(imageUri);
+      setImageDetails(image);
+    }
+  };
+
+  const config = {
+    headers: {
+      Authorization: `Bearer ${userInfo.accessToken}`,
+      'Content-Type': 'multipart/form-data',
+    },
+  };
+  const uploadImage = () => {
+    console.log('-------------->');
+    console.log(REST_API_BASE_URL);
+    console.log(image);
+    console.log(imageDetail);
+
+    setUploadImageLoading(true);
+
+    if (imageDetail === null) {
+      setUploadImageModel(false);
+      setUploadImageLoading(false);
+      ToastAndroid.show('You need to select image for upload', 1000);
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', {
+      uri: imageDetail.assets?.[0]?.uri,
+      type: imageDetail.assets?.[0]?.type,
+      name: imageDetail.assets?.[0]?.fileName,
+      fileName: imageDetail.assets?.[0]?.fileName,
+    });
+
+    axios
+      .post(`${REST_API_BASE_URL}/uploadImage`, formData, config)
+      .then(res => {
+        console.log('Respone --> ', res.data);
+        const imageUrl = `${REST_API_BASE_URL}/image/${res.data}`;
+        setImages([...images, imageUrl]);
+        setUploadImageLoading(false);
+        setUploadImageModel(false);
+      })
+      .catch(e => {
+        console.log('Error --> ', e);
+        setUploadImageLoading(false);
+        setUploadImageModel(false);
+
+        if (e.response) {
+          // Server-side error
+          if (e.response.status === 404) {
+            pageNotFoundError();
+          } else if (e.response.status === 401) {
+            tockenExpire();
+          }
+        } else if (e.request) {
+          // Network error
+          console.error('Network error: ', e.request);
+        } else {
+          // Something else
+          console.error('Error: ', e.message);
+        }
+      });
+  };
   let userSchema = Yup.object().shape({
-    content: Yup.string()
-      .required('Please Enter Content')
-      .min(10, 'content should not be less then 10 charactors'),
+    content: Yup.string().required('Content Should not be empty'),
   });
-  const nextPage = () => {};
+  const nextPage = async () => {
+    try {
+      await userSchema.validate({content}, {abortEarly: false});
+
+      navigation.navigate('PreviewScreen', content);
+
+      setErrors({});
+    } catch (error) {
+      console.log('inside the catch block');
+      // Reseting Succes Message
+
+      // Setting error messages identified by Yup
+      if (error instanceof Yup.ValidationError) {
+        // Extracting Yup specific validation errors from list of total errors
+        const yupErrors = {};
+        error.inner.forEach(innerError => {
+          yupErrors[innerError.path] = innerError.message;
+        });
+
+        // Saving extracted errors
+        setErrors(yupErrors);
+      }
+    }
+  };
+  const pageNotFoundError = () => {
+    Alert.alert(
+      'Post Not found',
+      'Post is not present in the database you need to restart the application to see the changes ',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'OK',
+        },
+      ],
+    );
+  };
+  const tockenExpire = () => {
+    Alert.alert(
+      'Token Expire',
+      'You need to login again to preform this operation, Press "OK" to logout ',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'OK',
+          onPress: () => {
+            logout();
+            navigation.navigate('Login');
+          },
+        },
+      ],
+    );
+  };
   return (
     <>
       <Animated.View
@@ -192,40 +379,479 @@ const AddContent = () => {
           {/* Below View is for adjusting with the heading height when scrolling  */}
           <View style={{height: moderateScale(30)}} />
         </ScrollView>
-      </View>
-      <View style={styles.toolbar}>
-        <TouchableOpacity onPress={handleHeading} style={styles.toolbarButton}>
-          <Text style={{color: 'black', fontSize: moderateScale(18)}}>H1</Text>
-        </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={handleSubHeading}
-          style={styles.toolbarButton}>
-          <Text style={{color: 'black'}}>H2</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleBold} style={styles.toolbarButton}>
-          <FeatherIcons name={'bold'} size={moderateScale(22)} color="black" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleItalic} style={styles.toolbarButton}>
-          <FeatherIcons
-            name={'italic'}
-            size={moderateScale(22)}
-            color="black"
-          />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleList} style={styles.toolbarButton}>
-          <FeatherIcons name={'list'} size={moderateScale(22)} color="black" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleLink} style={styles.toolbarButton}>
-          <FeatherIcons name={'link'} size={moderateScale(20)} color="black" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleCode} style={styles.toolbarButton}>
-          <FeatherIcons name={'code'} size={moderateScale(22)} color="black" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleCode} style={styles.toolbarButton}>
-          <FeatherIcons name={'image'} size={moderateScale(22)} color="black" />
-        </TouchableOpacity>
+        {/* Model for select images */}
+        <Modal
+          isVisible={selectImageModel}
+          transparent={true}
+          onBackButtonPress={() => setSelectImageModel(false)}
+          onBackdropPress={() => setSelectImageModel(false)}>
+          <View
+            style={{
+              flex: 1,
+              width: '105%',
+              alignSelf: 'center',
+              backgroundColor: 'white',
+              elevation: 20,
+              paddingHorizontal: 10,
+              borderRadius: 20,
+            }}>
+            {/* Close Button */}
+            <View
+              style={{
+                // backgroundColor: 'blue',
+                height: moderateScale(40),
+                alignItems: 'flex-end',
+                // borderWidth: 1,
+              }}>
+              <TouchableOpacity
+                onPress={() => {
+                  setSelectImageModel(false);
+                }}
+                style={{
+                  // borderWidth: 1,
+                  height: moderateScale(50),
+                  width: moderateScale(50),
+                  borderRadius: moderateScale(25),
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}>
+                <AntDesign
+                  name={'close'}
+                  size={moderateScale(29)}
+                  color="black"
+                />
+              </TouchableOpacity>
+            </View>
+
+            {/* Add Image Button */}
+            <Pressable
+              onPress={() => {
+                openImagePicker();
+                setUploadImageModel(true);
+              }}
+              style={{
+                borderWidth: 0.7,
+                borderColor: 'green',
+                borderRadius: moderateScale(10),
+                height: moderateScale(35),
+                flexDirection: 'row',
+                alignItems: 'center',
+                alignSelf: 'flex-start',
+                gap: moderateScale(10),
+                paddingHorizontal: moderateScale(10),
+                marginHorizontal: moderateScale(10),
+              }}>
+              <Ionicons name={'image'} size={moderateScale(25)} />
+
+              <Text
+                style={{
+                  fontSize: moderateScale(15),
+                  fontWeight: 'bold',
+                  // color: 'black',
+                }}>
+                ADD New Image
+              </Text>
+            </Pressable>
+
+            {/* Select Image Options */}
+            <View
+              style={{
+                width: '100%',
+                height: '80%',
+              }}>
+              <View
+                style={{
+                  padding: moderateScale(10),
+                  // borderWidth: 1,
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}>
+                <Text
+                  style={{
+                    fontSize: moderateScale(20),
+                    fontWeight: 'bold',
+                  }}>
+                  Select Image
+                </Text>
+              </View>
+
+              {/* Images */}
+              {images.length === 0 || images == undefined ? (
+                // If the Images are not available
+                <View
+                  style={{
+                    flex: 1,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}>
+                  <MaterialCommunityIcons
+                    name={'image-search'}
+                    size={moderateScale(52)}
+                  />
+                  <Text>No image found</Text>
+                </View>
+              ) : (
+                // If the Images are Available
+                <FlatList
+                  alignSelf={'center'}
+                  data={images}
+                  keyExtractor={(item, index) => index.toString()}
+                  renderItem={({item}) => (
+                    <View
+                      style={{
+                        borderWidth: 0.3,
+                        height: moderateScale(220),
+                        width: moderateScale(310),
+                        marginBottom: 20,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        borderRadius: 10,
+                      }}>
+                      <Image
+                        source={{uri: item}}
+                        style={{
+                          width: '90%',
+                          borderRadius: 5,
+                          marginBottom: 10,
+                          height: moderateScale(150),
+                        }}
+                      />
+
+                      {/* Add and Delete buttons container  */}
+                      <View
+                        style={{
+                          width: moderateScale(300),
+                          height: moderateScale(30),
+                          // borderWidth: 1,
+                          alignItems: 'center',
+                          justifyContent: 'space-around',
+                          flexDirection: 'row',
+                        }}>
+                        {/* ADD button */}
+                        <WhiteButton
+                          title={'ADD'}
+                          onPress={() => {
+                            handleImages(item);
+                            setSelectImageModel(false);
+                          }}
+                        />
+                        {/* DELETE button */}
+                        <BlackButton
+                          title={'Delete'}
+                          onPress={() => {
+                            Alert.alert(
+                              'Delete Warning !!!',
+                              'If you delete this image from here then the image is not gonna work in your Post',
+                              [
+                                {
+                                  text: 'Cancel',
+                                  style: 'cancel',
+                                },
+                                {
+                                  text: 'OK',
+                                  onPress: () => {},
+                                },
+                              ],
+                            );
+                          }}
+                        />
+                      </View>
+                    </View>
+                  )}
+                />
+              )}
+            </View>
+          </View>
+
+          {/* Model for select Upload Images */}
+          <Modal
+            isVisible={uploadImageModel}
+            transparent={true}
+            // onBackButtonPress={() => setUploadImageModel(false)}
+            // onBackdropPress={() => setUploadImageModel(false)}
+          >
+            <View
+              style={{
+                minHeight: '50%',
+                width: '100%',
+                alignSelf: 'center',
+                backgroundColor: 'white',
+                elevation: 20,
+                paddingHorizontal: 10,
+                borderRadius: 20,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
+              <View
+                style={{
+                  minHeight: 180,
+                  // borderWidth: 1,
+                  borderRadius: 5,
+                  // justifyContent: 'center',
+                  alignItems: 'center',
+                  width: '100%',
+                }}>
+                {image === '' ? (
+                  <View></View>
+                ) : (
+                  <Image
+                    source={{uri: image}}
+                    style={{
+                      width: '90%',
+                      height: moderateScale(150),
+                    }}
+                  />
+                )}
+              </View>
+              {/* Upload and Cancel buttons container  */}
+              <View
+                style={{
+                  width: moderateScale(300),
+                  height: moderateScale(30),
+                  // borderWidth: 1,
+                  alignItems: 'center',
+                  justifyContent: 'space-around',
+                  flexDirection: 'row',
+                }}>
+                {/* ADD button */}
+                {uploadImageLoading ? (
+                  <WhiteButtonLoading />
+                ) : (
+                  <WhiteButton title={'Upload'} onPress={uploadImage} />
+                )}
+                {/* DELETE button */}
+                <BlackButton
+                  title={'Cancel'}
+                  onPress={() => {
+                    setUploadImageModel(false);
+                    setImage('');
+                    setImageDetails(null);
+                    setUploadImageLoading(false);
+                  }}
+                />
+              </View>
+            </View>
+          </Modal>
+        </Modal>
+
+        {/* Model for select Link */}
+        <Modal
+          isVisible={selectLinkModel}
+          transparent={true}
+          onBackButtonPress={() => setSelectLinkModel(false)}
+          onBackdropPress={() => setSelectLinkModel(false)}>
+          <View
+            style={{
+              height: moderateScale(250),
+              width: '105%',
+              alignSelf: 'center',
+              backgroundColor: 'white',
+              elevation: 20,
+              paddingHorizontal: 10,
+              borderRadius: 20,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+            {/* Link text */}
+            <View
+              style={{
+                width: '90%',
+                height: moderateScale(40),
+                borderWidth: 1,
+                borderRadius: 5,
+                marginBottom: 5,
+              }}>
+              <TextInput
+                value={linkText}
+                onChangeText={txt => setLinkText(txt)}
+                placeholder="Enter text here"
+              />
+            </View>
+
+            {/* Link  */}
+            <View
+              style={{
+                width: '90%',
+                height: moderateScale(40),
+                borderWidth: 1,
+                borderRadius: 5,
+              }}>
+              <TextInput
+                value={link}
+                onChangeText={txt => setLink(txt)}
+                placeholder={
+                  linkError
+                    ? 'Link should not be empty'
+                    : 'Paste your link here...'
+                }
+                placeholderTextColor={linkError && 'red'}
+              />
+            </View>
+            <View
+              style={{
+                width: '90%',
+                height: moderateScale(35),
+                flexDirection: 'row',
+                justifyContent: 'space-around',
+                marginTop: moderateScale(20),
+              }}>
+              <WhiteButton
+                title={'Add'}
+                onPress={() => {
+                  if (link === '') {
+                    setLinkError(true);
+                  } else {
+                    handleLink(linkText, link);
+                    setLinkError(false);
+                    setLink('');
+                    setLinkText('');
+                    setSelectLinkModel(false);
+                  }
+                }}
+              />
+              <BlackButton
+                title={'Cancel'}
+                onPress={() => {
+                  setLinkError(false);
+                  setLink('');
+                  setLinkText('');
+                  setSelectLinkModel(false);
+                }}
+              />
+            </View>
+          </View>
+        </Modal>
       </View>
+
+      {swapToolbar ? (
+        <View style={styles.toolbar}>
+          <TouchableOpacity
+            onPress={handleHeading}
+            style={styles.toolbarButton}>
+            <Text style={{color: 'black', fontSize: moderateScale(18)}}>
+              H1
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={handleSubHeading}
+            style={styles.toolbarButton}>
+            <Text style={{color: 'black'}}>H2</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleBold} style={styles.toolbarButton}>
+            <FeatherIcons
+              name={'bold'}
+              size={moderateScale(22)}
+              color="black"
+            />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleItalic} style={styles.toolbarButton}>
+            <FeatherIcons
+              name={'italic'}
+              size={moderateScale(22)}
+              color="black"
+            />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleList} style={styles.toolbarButton}>
+            <FeatherIcons
+              name={'list'}
+              size={moderateScale(22)}
+              color="black"
+            />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleOlList} style={styles.toolbarButton}>
+            <MaterialCommunityIcons
+              name={'format-list-numbered'}
+              size={moderateScale(22)}
+              color="black"
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setSelectLinkModel(true)}
+            style={styles.toolbarButton}>
+            <FeatherIcons
+              name={'link'}
+              size={moderateScale(20)}
+              color="black"
+            />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleCode} style={styles.toolbarButton}>
+            <FeatherIcons
+              name={'code'}
+              size={moderateScale(22)}
+              color="black"
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setSelectImageModel(true)}
+            style={styles.toolbarButton}>
+            <FeatherIcons
+              name={'image'}
+              size={moderateScale(22)}
+              color="black"
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setSwapToolbar(!swapToolbar)}
+            style={styles.toolbarButton}>
+            <MaterialIcons
+              name={'swap-vert'}
+              size={moderateScale(25)}
+              color="black"
+            />
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <View style={styles.toolbar}>
+          <TouchableOpacity
+            onPress={() => setSelectImageModel(true)}
+            style={styles.toolbarButton}>
+            <FeatherIcons
+              name={'hash'}
+              size={moderateScale(22)}
+              color="black"
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setSelectImageModel(true)}
+            style={styles.toolbarButton}>
+            <FontAwesome6
+              name={'star-of-life'}
+              size={moderateScale(12)}
+              color="black"
+            />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleBold} style={styles.toolbarButton}>
+            <Text style={{fontSize: 30, color: 'black'}}>`</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleBold} style={styles.toolbarButton}>
+            <Text style={{fontSize: 22, color: 'black'}}>[</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleBold} style={styles.toolbarButton}>
+            <Text style={{fontSize: 22, color: 'black'}}>]</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setSelectImageModel(true)}
+            style={styles.toolbarButton}>
+            <FeatherIcons
+              name={'image'}
+              size={moderateScale(22)}
+              color="black"
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setSwapToolbar(!swapToolbar)}
+            style={styles.toolbarButton}>
+            <MaterialIcons
+              name={'swap-vert'}
+              size={moderateScale(25)}
+              color="black"
+            />
+          </TouchableOpacity>
+        </View>
+      )}
     </>
   );
 };

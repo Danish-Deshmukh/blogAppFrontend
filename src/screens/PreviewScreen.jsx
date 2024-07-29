@@ -270,8 +270,8 @@ const PreviewScreen = item => {
           scrollY.setValue(e.nativeEvent.contentOffset.y);
         }}
         style={styles.container}>
-        <Text style={[styles.text, styles.headingText]}>{post.title}</Text>
-        {post.image && (
+        {/* <Text style={[styles.text, styles.headingText]}>{post.title}</Text> */}
+        {/* {post.image && (
           <View>
             <Image
               style={{
@@ -285,11 +285,11 @@ const PreviewScreen = item => {
               }}
             />
           </View>
-        )}
+        )} */}
 
-        <Text style={[styles.text, styles.descText]}>{post.description}</Text>
+        {/* <Text style={[styles.text, styles.descText]}>{post.description}</Text> */}
         {/* <Text style={[styles.text, styles.bodyText]}>{post.content}</Text> */}
-        <Markdown style={markdownStyles}>{post.content}</Markdown>
+        <Markdown style={markdownStyles}>{post}</Markdown>
         <View style={{height: 160}} />
       </ScrollView>
 

@@ -66,6 +66,9 @@ const PreviewScreen = item => {
       Authorization: `Bearer ${userInfo.accessToken}`,
     },
   };
+  const FinalPrivewScreen = () => {
+    navigation.navigate('FinalPrivewScreen');
+  };
   const submitPost = () => {
     console.log('submit button called');
     console.log(REST_API_BASE_URL);
@@ -309,12 +312,12 @@ const PreviewScreen = item => {
           zIndex: 1,
         }}>
         {post.forUpdate === true ? (
-          <TouchableOpacity onPress={updatePost} style={styles.button}>
-            <Text style={styles.buttonTxt}>Update</Text>
+          <TouchableOpacity onPress={FinalPrivewScreen} style={styles.button}>
+            <Text style={styles.buttonTxt}>Next</Text>
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity onPress={submitPost} style={styles.button}>
-            <Text style={styles.buttonTxt}>Post</Text>
+          <TouchableOpacity onPress={FinalPrivewScreen} style={styles.button}>
+            <Text style={styles.buttonTxt}>Next</Text>
           </TouchableOpacity>
         )}
       </Animated.View>

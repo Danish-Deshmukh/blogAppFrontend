@@ -10,9 +10,10 @@ import {
   FlatList,
   Image,
   ToastAndroid,
+  BackHandler,
 } from 'react-native';
 import Modal from 'react-native-modal';
-import React, {useContext, useState} from 'react';
+import React, {useCallback, useContext, useEffect, useState} from 'react';
 import FeatherIcons from 'react-native-vector-icons/Feather';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -20,7 +21,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import * as Yup from 'yup';
 import {moderateScale, verticalScale} from 'react-native-size-matters';
 import {GestureHandlerRootView, ScrollView} from 'react-native-gesture-handler';
-import {useNavigation} from '@react-navigation/native';
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
 
 // Icons
 import AntDesign from 'react-native-vector-icons/AntDesign';
@@ -81,6 +82,39 @@ const AddContent = () => {
     insertText('\n``` \n', '\n \n```\n');
   };
 
+  // Adding back handler
+  // If your press back accidentaly then it will show alert
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () =>
+      backAction(navigation),
+    );
+
+    return () => backHandler.remove();
+  }, [navigation, content]);
+
+  const backAction = navigation => {
+    console.log('back method called ');
+    if (content != '') {
+      // navigation.goBack();
+      // console.log('if content is empty is called ');
+      Alert.alert(
+        'Hold on!',
+        'If you press back, your content data in this page will be erased. Do you want to proceed?',
+        [
+          {
+            text: 'Cancel',
+            onPress: () => null,
+            style: 'cancel',
+          },
+          {text: 'OK', onPress: () => navigation.goBack()},
+        ],
+      );
+      // return;
+    } else {
+      navigation.goBack();
+    }
+    return true;
+  };
   const [selectLinkModel, setSelectLinkModel] = useState(false);
   const [linkText, setLinkText] = useState('');
   const [link, setLink] = useState('');
@@ -104,7 +138,7 @@ const AddContent = () => {
   const [image, setImage] = useState('');
   const [imageDetail, setImageDetails] = useState(null);
   const [images, setImages] = useState([]);
-  console.log(images);
+  // console.log(imageDetail);
   const [imagesForUpload, setImagesForUpload] = useState([]);
   const openImagePicker = async () => {
     const options = {
@@ -189,6 +223,59 @@ const AddContent = () => {
           console.error('Error: ', e.message);
         }
       });
+  };
+  const API_KEY = '65ec53011a5c2b867880fd13292aaa64';
+  const url = `https://api.imgbb.com/1/upload?key=${API_KEY}`;
+  const uploadImagebb = async () => {
+    setUploadImageLoading(true);
+
+    if (imageDetail === null) {
+      setUploadImageModel(false);
+      setUploadImageLoading(false);
+      ToastAndroid.show('You need to select image for upload', 1000);
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('image', {
+      uri: imageDetail.assets?.[0]?.uri,
+      type: imageDetail.assets?.[0]?.type,
+      name: imageDetail.assets?.[0]?.fileName,
+      fileName: imageDetail.assets?.[0]?.fileName,
+    });
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      const res = await response.json();
+      // console.log(res);
+      if (response.ok) {
+        console.log('Response --> ', res);
+        console.log('print the uri ', res.data.url);
+        const imageUrl = res.data.url;
+        // setImages([...images, imageUrl]);
+        setImages(prevImages => [imageUrl, ...prevImages]);
+        setUploadImageLoading(false);
+        setUploadImageModel(false);
+      } else {
+        console.error('Upload failed:', res);
+        setUploadImageLoading(false);
+        setUploadImageModel(false);
+        if (res.error) {
+          console.error('Error:', res.error.message);
+        }
+      }
+    } catch (e) {
+      console.error('Error --> ', e);
+      setUploadImageLoading(false);
+      setUploadImageModel(false);
+    }
   };
   let userSchema = Yup.object().shape({
     content: Yup.string().required('Content Should not be empty'),
@@ -278,7 +365,7 @@ const AddContent = () => {
           <View style={styles.headTitleContainer}>
             <Pressable
               onPress={() => {
-                navigation.goBack();
+                backAction(navigation);
               }}
               style={{
                 // borderWidth: 1,
@@ -619,7 +706,7 @@ const AddContent = () => {
                 {uploadImageLoading ? (
                   <WhiteButtonLoading />
                 ) : (
-                  <WhiteButton title={'Upload'} onPress={uploadImage} />
+                  <WhiteButton title={'Upload'} onPress={uploadImagebb} />
                 )}
                 {/* DELETE button */}
                 <BlackButton
@@ -806,7 +893,9 @@ const AddContent = () => {
       ) : (
         <View style={styles.toolbar}>
           <TouchableOpacity
-            onPress={() => setSelectImageModel(true)}
+            onPress={() => {
+              insertText('#');
+            }}
             style={styles.toolbarButton}>
             <FeatherIcons
               name={'hash'}
@@ -815,7 +904,9 @@ const AddContent = () => {
             />
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => setSelectImageModel(true)}
+            onPress={() => {
+              insertText('*');
+            }}
             style={styles.toolbarButton}>
             <FontAwesome6
               name={'star-of-life'}
@@ -823,13 +914,25 @@ const AddContent = () => {
               color="black"
             />
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleBold} style={styles.toolbarButton}>
+          <TouchableOpacity
+            onPress={() => {
+              insertText('`');
+            }}
+            style={styles.toolbarButton}>
             <Text style={{fontSize: 30, color: 'black'}}>`</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleBold} style={styles.toolbarButton}>
+          <TouchableOpacity
+            onPress={() => {
+              insertText('[');
+            }}
+            style={styles.toolbarButton}>
             <Text style={{fontSize: 22, color: 'black'}}>[</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleBold} style={styles.toolbarButton}>
+          <TouchableOpacity
+            onPress={() => {
+              insertText(']');
+            }}
+            style={styles.toolbarButton}>
             <Text style={{fontSize: 22, color: 'black'}}>]</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -941,10 +1044,13 @@ const styles = StyleSheet.create({
     width: '100%',
     backgroundColor: 'white',
     height: moderateScale(30),
+    marginBottom: 5,
   },
   toolbarButton: {
     justifyContent: 'center',
     alignItems: 'center',
-    // borderWidth: 1,
+    borderWidth: 1,
+    width: moderateScale(35),
+    borderRadius: moderateScale(5),
   },
 });

@@ -27,6 +27,7 @@ import PreviewScreen from './screens/PreviewScreen';
 import TemplateForMarkdown from './screens/TemplateForMarkdown';
 import AddContent from './screens/AddContent';
 import Bookmark from './screens/Bookmark';
+import FinalPrivewScreen from './screens/FinalPrivewScreen';
 
 const NativeSTACK = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -223,6 +224,15 @@ export default function Navigation() {
             headerShown: true,
             headerTitle: 'Preview of the Post',
             animation: 'slide_from_right',
+          }}
+        />
+        <NativeSTACK.Screen
+          name="FinalPrivewScreen"
+          component={FinalPrivewScreen}
+          options={{
+            headerShown: true,
+            headerTitle: 'Final preview screen',
+            animation: 'slide_from_right'
           }}
         />
         <NativeSTACK.Screen

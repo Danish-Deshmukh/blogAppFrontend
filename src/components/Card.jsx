@@ -6,10 +6,10 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, { useContext } from 'react';
+import React, {useContext} from 'react';
 import {moderateScale, verticalScale} from 'react-native-size-matters';
 import {useNavigation} from '@react-navigation/native';
-import { AuthContext } from '../context/AuthContext';
+import {AuthContext} from '../context/AuthContext';
 
 export default function Card({item}) {
   const {REST_API_BASE_URL} = useContext(AuthContext);
@@ -28,6 +28,7 @@ export default function Card({item}) {
         backgroundColor: 'white',
         flexDirection: 'row',
       }}>
+      {/* Title and desc container */}
       <View
         style={{
           // borderWidth: 1,
@@ -60,6 +61,8 @@ export default function Card({item}) {
           </Text>
         </View>
       </View>
+
+      {/* Image container */}
       <View
         style={{
           // borderWidth: 1,
@@ -73,7 +76,7 @@ export default function Card({item}) {
             height: '30%',
             width: '90%',
           }}>
-          {item.image && (
+          {item.coverImage && (
             <Image
               style={{
                 width: '100%',
@@ -81,67 +84,16 @@ export default function Card({item}) {
                 borderRadius: moderateScale(2),
               }}
               source={{
-                uri: `${REST_API_BASE_URL}/image/${item.image}`,
+                uri: `${REST_API_BASE_URL}/image/${item.coverImage}`,
               }}
             />
           )}
         </View>
       </View>
-    </TouchableOpacity>
 
-    // <Pressable
-    //   onPress={() => {
-    //     navigation.navigate('PostDetailScreen', item);
-    //   }}
-    //   style={{
-    //     borderWidth: 0.5,
-    //     margin: moderateScale(10),
-    //     borderRadius: moderateScale(10),
-    //     height: verticalScale(190),
-    //     // elevation: 1,
-    //     // padding: moderateScale(2)
-    //   }}>
-    //   {item.image && (
-    //     <Image
-    //       style={{
-    //         width: '100%',
-    //         height: '100%',
-    //         borderRadius: moderateScale(10),
-    //         opacity: 0.5,
-    //       }}
-    //       source={{
-    //         uri: `${REST_API_BASE_URL}/image/${item.image}`,
-    //       }}
-    //     />
-    //   )}
-    //   <View
-    //     style={{
-    //       //   borderWidth: 1,
-    //       position: 'absolute',
-    //       paddingHorizontal: moderateScale(10),
-    //       bottom: verticalScale(50),
-    //       left: moderateScale(10),
-    //     }}>
-    //     {/* <Text style={[styles.text, styles.titleText]} numberOfLines={1}>
-    //       {item.id}
-    //     </Text> */}
-    //     <Text style={[styles.text, styles.titleText]} numberOfLines={1}>
-    //       {item.title}
-    //     </Text>
-    //   </View>
-    //   <View
-    //     style={{
-    //       //   borderWidth: 1,
-    //       position: 'absolute',
-    //       bottom: verticalScale(15),
-    //       left: moderateScale(10),
-    //       paddingHorizontal: moderateScale(10),
-    //     }}>
-    //     <Text style={[styles.text, styles.descText]} numberOfLines={2}>
-    //       {item.description}
-    //     </Text>
-    //   </View>
-    // </Pressable>
+      {/* Comment and Bookmark button container  */}
+      <View></View>
+    </TouchableOpacity>
   );
 }
 

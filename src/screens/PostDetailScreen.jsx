@@ -183,6 +183,7 @@ export default function PostDetailScreen(item) {
       ],
     );
   };
+
   return (
     <View style={{flex: 1}}>
       {/* Header */}
@@ -421,9 +422,9 @@ export default function PostDetailScreen(item) {
         {/* Below View is for adjusting with the heading height when scrolling  */}
         <View style={{height: moderateScale(50)}} />
 
-        <Text style={[styles.text, styles.headingText]}>{data.title}</Text>
-        <Text style={[styles.text, styles.autherText]}>auther: {auther}</Text>
-        {data.image && (
+        {/* <Text style={[styles.text, styles.headingText]}>{data.title}</Text> */}
+        {/* <Text style={[styles.text, styles.autherText]}>auther: {auther}</Text> */}
+        {data.coverImage && (
           <View>
             <TouchableOpacity onPress={() => setFullViewImage(true)}>
               <Image
@@ -434,7 +435,7 @@ export default function PostDetailScreen(item) {
                   marginBottom: moderateScale(10),
                 }}
                 source={{
-                  uri: `${REST_API_BASE_URL}/image/${data.image}`,
+                  uri: `${REST_API_BASE_URL}/image/${data.coverImage}`,
                 }}
               />
             </TouchableOpacity>
@@ -442,7 +443,7 @@ export default function PostDetailScreen(item) {
             <ImageView
               images={[
                 {
-                  uri: `${REST_API_BASE_URL}/image/${data.image}`,
+                  uri: `${REST_API_BASE_URL}/image/${data.coverImage}`,
                 },
               ]}
               visible={fullViewImage}
@@ -451,7 +452,7 @@ export default function PostDetailScreen(item) {
           </View>
         )}
 
-        <Text style={[styles.text, styles.descText]}>{data.description}</Text>
+        {/* <Text style={[styles.text, styles.descText]}>{data.description}</Text> */}
 
         <Markdown style={markdownStyles}>{data.content}</Markdown>
 

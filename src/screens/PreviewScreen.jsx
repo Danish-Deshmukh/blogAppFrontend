@@ -18,22 +18,16 @@ import {useQueryClient} from '@tanstack/react-query';
 
 const PreviewScreen = item => {
   const post = item.route.params;
-
-  console.log(post.id);
-  console.log(post.title);
-  console.log(post.description);
-  console.log(post.content);
-  console.log(post.categoryId);
-  console.log(post.image);
-  console.log('------------------------------');
+  console.log('=======================');
+  console.log(post);
 
   const {isAdmin, logout, userInfo, REST_API_BASE_URL} =
     useContext(AuthContext);
   const [serverError, setServerError] = useState(false);
   const navigation = useNavigation();
 
-  let imageUri =
-    post?.image?.uri || post?.image?.assets?.[0]?.uri || post.image;
+  // let imageUri =
+  //   post?.image?.uri || post?.image?.assets?.[0]?.uri || post.image;
 
   // Animation related
   const scrollConst = verticalScale(150);
@@ -67,157 +61,157 @@ const PreviewScreen = item => {
     },
   };
   const FinalPrivewScreen = () => {
-    navigation.navigate('FinalPrivewScreen');
+    navigation.navigate('FinalPrivewScreen', post);
   };
-  const submitPost = () => {
-    console.log('submit button called');
-    console.log(REST_API_BASE_URL);
-    const title = post.title;
-    const description = post.description;
-    const content = post.content;
-    const categoryId = post.categoryId;
-    const image = post.image;
+  // const submitPost = () => {
+  //   console.log('submit button called');
+  //   console.log(REST_API_BASE_URL);
+  //   const title = post.title;
+  //   const description = post.description;
+  //   const content = post.content;
+  //   const categoryId = post.categoryId;
+  //   const image = post.image;
 
-    // If the Image is available then this If statemtnt going to execute
-    if (image != null) {
-      console.log('if black called ');
+  //   // If the Image is available then this If statemtnt going to execute
+  //   if (image != null) {
+  //     console.log('if black called ');
 
-      const formData = new FormData();
-      formData.append('file', {
-        uri: image?.assets?.[0]?.uri,
-        type: image?.assets?.[0]?.type,
-        name: image?.assets?.[0]?.fileName,
-        fileName: image?.assets?.[0]?.fileName,
-      });
+  //     const formData = new FormData();
+  //     formData.append('file', {
+  //       uri: image?.assets?.[0]?.uri,
+  //       type: image?.assets?.[0]?.type,
+  //       name: image?.assets?.[0]?.fileName,
+  //       fileName: image?.assets?.[0]?.fileName,
+  //     });
 
-      const postDto = JSON.stringify({
-        title: title,
-        description: description,
-        content: content,
-        categoryId: categoryId,
-      });
+  //     const postDto = JSON.stringify({
+  //       title: title,
+  //       description: description,
+  //       content: content,
+  //       categoryId: categoryId,
+  //     });
 
-      formData.append('postDto', postDto);
+  //     formData.append('postDto', postDto);
 
-      axios
-        .post(`${REST_API_BASE_URL}/posts/withFile`, formData, config)
-        .then(res => {
-          console.log(res);
-          Refresh();
-          navigation.navigate('Home');
-        })
-        .catch(e => {
-          console.log(`error------------> ${e}`);
+  //     axios
+  //       .post(`${REST_API_BASE_URL}/posts/withFile`, formData, config)
+  //       .then(res => {
+  //         console.log(res);
+  //         Refresh();
+  //         navigation.navigate('Home');
+  //       })
+  //       .catch(e => {
+  //         console.log(`error------------> ${e}`);
 
-          console.log(e.response.status);
-          if (e.response.status === 404) {
-            pageNotFoundError();
-          }
+  //         console.log(e.response.status);
+  //         if (e.response.status === 404) {
+  //           pageNotFoundError();
+  //         }
 
-          if (e.response.status === 401) {
-            tockenExpire();
-          }
-        });
-    }
-    // If the Image is not available then this is going to excecute
-    else {
-      console.log('else block called ');
-      console.log(title);
-      console.log(description);
-      console.log(content);
-      console.log(categoryId);
+  //         if (e.response.status === 401) {
+  //           tockenExpire();
+  //         }
+  //       });
+  //   }
+  //   // If the Image is not available then this is going to excecute
+  //   else {
+  //     console.log('else block called ');
+  //     console.log(title);
+  //     console.log(description);
+  //     console.log(content);
+  //     console.log(categoryId);
 
-      axios
-        .post(
-          `${REST_API_BASE_URL}/posts`,
-          {
-            title,
-            description,
-            content,
-            categoryId,
-          },
-          configForNoImage,
-        )
-        .then(res => {
-          console.log(res);
-          Refresh();
-          navigation.navigate('Home');
-        })
-        .catch(e => {
-          console.log(`error------------> ${e}`);
+  //     axios
+  //       .post(
+  //         `${REST_API_BASE_URL}/posts`,
+  //         {
+  //           title,
+  //           description,
+  //           content,
+  //           categoryId,
+  //         },
+  //         configForNoImage,
+  //       )
+  //       .then(res => {
+  //         console.log(res);
+  //         Refresh();
+  //         navigation.navigate('Home');
+  //       })
+  //       .catch(e => {
+  //         console.log(`error------------> ${e}`);
 
-          console.log(e.response.status);
-          if (e.response.status === 404) {
-            pageNotFoundError();
-          }
+  //         console.log(e.response.status);
+  //         if (e.response.status === 404) {
+  //           pageNotFoundError();
+  //         }
 
-          if (e.response.status === 401) {
-            tockenExpire();
-          }
-        });
-    }
-  };
+  //         if (e.response.status === 401) {
+  //           tockenExpire();
+  //         }
+  //       });
+  //   }
+  // };
 
-  const updatePost = () => {
-    console.log('Update method called');
-    console.log(REST_API_BASE_URL);
-    const ID = post.id;
-    const title = post.title;
-    const description = post.description;
-    const content = post.content;
-    const categoryId = post.categoryId;
-    const image = post.image;
+  // const updatePost = () => {
+  //   console.log('Update method called');
+  //   console.log(REST_API_BASE_URL);
+  //   const ID = post.id;
+  //   const title = post.title;
+  //   const description = post.description;
+  //   const content = post.content;
+  //   const categoryId = post.categoryId;
+  //   const image = post.image;
 
-    const formData = new FormData();
+  //   const formData = new FormData();
 
-    if (image != null) {
-      console.log('Defining this if the file is exist');
-      formData.append('file', {
-        uri: image.assets?.[0]?.uri,
-        type: image.assets?.[0]?.type,
-        name: image.assets?.[0]?.fileName,
-        fileName: image.assets?.[0]?.fileName,
-      });
-    }
+  //   if (image != null) {
+  //     console.log('Defining this if the file is exist');
+  //     formData.append('file', {
+  //       uri: image.assets?.[0]?.uri,
+  //       type: image.assets?.[0]?.type,
+  //       name: image.assets?.[0]?.fileName,
+  //       fileName: image.assets?.[0]?.fileName,
+  //     });
+  //   }
 
-    if (image === null) {
-      console.log('Defining if file is null');
-      formData.append('file', null);
-    }
+  //   if (image === null) {
+  //     console.log('Defining if file is null');
+  //     formData.append('file', null);
+  //   }
 
-    const postDto = JSON.stringify({
-      title: title,
-      description: description,
-      content: content,
-      categoryId: categoryId,
-    });
+  //   const postDto = JSON.stringify({
+  //     title: title,
+  //     description: description,
+  //     content: content,
+  //     categoryId: categoryId,
+  //   });
 
-    formData.append('postDto', postDto);
+  //   formData.append('postDto', postDto);
 
-    axios
-      .put(`${REST_API_BASE_URL}/posts/${ID}`, formData, config)
-      .then(res => {
-        console.log(res);
-        Refresh();
-        navigation.navigate('Home');
-      })
-      .catch(e => {
-        console.log(`register error --------------> ${e}`);
-        console.log(e.response);
-        // console.log(e.response.status);
+  //   axios
+  //     .put(`${REST_API_BASE_URL}/posts/${ID}`, formData, config)
+  //     .then(res => {
+  //       console.log(res);
+  //       Refresh();
+  //       navigation.navigate('Home');
+  //     })
+  //     .catch(e => {
+  //       console.log(`register error --------------> ${e}`);
+  //       console.log(e.response);
+  //       // console.log(e.response.status);
 
-        if (e.response.status >= 500) {
-          setServerError(true);
-        }
-        if (e.response.status === 404) {
-          pageNotFoundError();
-        }
+  //       if (e.response.status >= 500) {
+  //         setServerError(true);
+  //       }
+  //       if (e.response.status === 404) {
+  //         pageNotFoundError();
+  //       }
 
-        if (e.response.status === 401) {
-          tockenExpire();
-        }
-      });
-  };
+  //       if (e.response.status === 401) {
+  //         tockenExpire();
+  //       }
+  //     });
+  // };
 
   const pageNotFoundError = () => {
     Alert.alert(
@@ -292,7 +286,7 @@ const PreviewScreen = item => {
 
         {/* <Text style={[styles.text, styles.descText]}>{post.description}</Text> */}
         {/* <Text style={[styles.text, styles.bodyText]}>{post.content}</Text> */}
-        <Markdown style={markdownStyles}>{post}</Markdown>
+        <Markdown style={markdownStyles}>{post.content}</Markdown>
         <View style={{height: 160}} />
       </ScrollView>
 
@@ -313,7 +307,7 @@ const PreviewScreen = item => {
         }}>
         {post.forUpdate === true ? (
           <TouchableOpacity onPress={FinalPrivewScreen} style={styles.button}>
-            <Text style={styles.buttonTxt}>Next</Text>
+            <Text style={styles.buttonTxt}>Update</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity onPress={FinalPrivewScreen} style={styles.button}>

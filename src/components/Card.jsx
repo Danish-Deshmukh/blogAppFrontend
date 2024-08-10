@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
   },
   titleText: {
     fontSize: moderateScale(20),
-    fontWeight: '700',
+    fontWeight: '500',
     // textTransform: 'capitalize',
   },
   descText: {

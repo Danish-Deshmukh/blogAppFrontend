@@ -37,6 +37,7 @@ import axios from 'axios';
 const AddContent = () => {
   const navigation = useNavigation();
   const {userInfo, logout, REST_API_BASE_URL} = useContext(AuthContext);
+  // console.log(userInfo)
   const scrollConst = verticalScale(50);
   const scrollY = new Animated.Value(0);
   const diffclamp = Animated.diffClamp(scrollY, 0, scrollConst);
@@ -56,47 +57,20 @@ const AddContent = () => {
     setContent(`${start}${prefix}${selectedText}${suffix}${end}`);
   };
 
-  const handleBold = () => {
-    insertText('**', '**');
-  };
-
-  const handleItalic = () => {
-    insertText('*', '*');
-  };
-
-  const handleHeading = () => {
-    insertText('# ');
-  };
-  const handleList = () => {
-    insertText('\n-  \n-  \n-  ');
-  };
-
-  const handleOlList = () => {
-    insertText('\n1.  \n2.  \n3.  \n4.  ');
-  };
-
-  const handleSubHeading = () => {
-    insertText('## ');
-  };
-  const handleCode = () => {
-    insertText('\n``` \n', '\n \n```\n');
-  };
-
   // Adding back handler
   // If your press back accidentaly then it will show alert
-  useEffect(() => {
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', () =>
-      backAction(navigation),
-    );
+  useFocusEffect(
+    useCallback(() => {
+      BackHandler.addEventListener('hardwareBackPress', backAction);
 
-    return () => backHandler.remove();
-  }, [navigation, content]);
-
-  const backAction = navigation => {
+      return () => {
+        BackHandler.removeEventListener('hardwareBackPress', backAction);
+      };
+    }),
+  );
+  const backAction = () => {
     console.log('back method called ');
     if (content != '') {
-      // navigation.goBack();
-      // console.log('if content is empty is called ');
       Alert.alert(
         'Hold on!',
         'If you press back, your content data in this page will be erased. Do you want to proceed?',
@@ -109,12 +83,12 @@ const AddContent = () => {
           {text: 'OK', onPress: () => navigation.goBack()},
         ],
       );
-      // return;
     } else {
       navigation.goBack();
     }
     return true;
   };
+
   const [selectLinkModel, setSelectLinkModel] = useState(false);
   const [linkText, setLinkText] = useState('');
   const [link, setLink] = useState('');
@@ -138,8 +112,6 @@ const AddContent = () => {
   const [image, setImage] = useState('');
   const [imageDetail, setImageDetails] = useState(null);
   const [images, setImages] = useState([]);
-  // console.log(imageDetail);
-  const [imagesForUpload, setImagesForUpload] = useState([]);
   const openImagePicker = async () => {
     const options = {
       title: 'Select Image',
@@ -165,13 +137,14 @@ const AddContent = () => {
     }
   };
 
-  const config = {
-    headers: {
-      Authorization: `Bearer ${userInfo.accessToken}`,
-      'Content-Type': 'multipart/form-data',
-    },
-  };
+  // This method was use for when we want to store images into the local server, but now it's not gonna work
   const uploadImage = () => {
+    const config = {
+      headers: {
+        Authorization: `Bearer ${userInfo.accessToken}`,
+        'Content-Type': 'multipart/form-data',
+      },
+    };
     console.log('-------------->');
     console.log(REST_API_BASE_URL);
     console.log(image);
@@ -284,7 +257,12 @@ const AddContent = () => {
     try {
       await userSchema.validate({content}, {abortEarly: false});
 
-      navigation.navigate('PreviewScreen', content);
+      const postContent = {
+        content: content,
+        images: images,
+        forUpdate: false,
+      };
+      navigation.navigate('PreviewScreen', postContent);
 
       setErrors({});
     } catch (error) {
@@ -363,10 +341,7 @@ const AddContent = () => {
             backgroundColor: 'white',
           }}>
           <View style={styles.headTitleContainer}>
-            <Pressable
-              onPress={() => {
-                backAction(navigation);
-              }}
+            <View
               style={{
                 // borderWidth: 1,
                 alignSelf: 'flex-start',
@@ -374,13 +349,25 @@ const AddContent = () => {
                 columnGap: moderateScale(10),
                 alignItems: 'center',
               }}>
-              <FeatherIcons
-                name={'arrow-left'}
-                size={moderateScale(22)}
-                color="black"
-              />
+              <TouchableOpacity
+                onPress={() => {
+                  backAction(navigation);
+                }}
+                style={{
+                  // borderWidth: 1,
+                  borderRadius: moderateScale(20),
+                  columnGap: moderateScale(10),
+                  alignItems: 'center',
+                }}>
+                <FeatherIcons
+                  name={'arrow-left'}
+                  size={moderateScale(22)}
+                  color="black"
+                />
+              </TouchableOpacity>
+
               <Text style={styles.headTitleText}>Back</Text>
-            </Pressable>
+            </View>
           </View>
 
           {/* Template Button and Post or Update button */}
@@ -453,8 +440,8 @@ const AddContent = () => {
             onChangeText={setContent}
             onSelectionChange={({nativeEvent: {selection, text}}) => {
               setSelection(selection);
-              console.log(selection);
-              console.log(text);
+              // console.log(selection);
+              // console.log(text);
             }}
             // onBlur={handleBlur('title')}
             multiline
@@ -815,40 +802,59 @@ const AddContent = () => {
       {swapToolbar ? (
         <View style={styles.toolbar}>
           <TouchableOpacity
-            onPress={handleHeading}
+            onPress={() => {
+              insertText('# ');
+            }}
             style={styles.toolbarButton}>
             <Text style={{color: 'black', fontSize: moderateScale(18)}}>
               H1
             </Text>
           </TouchableOpacity>
-
           <TouchableOpacity
-            onPress={handleSubHeading}
+            onPress={() => {
+              insertText('## ');
+            }}
             style={styles.toolbarButton}>
             <Text style={{color: 'black'}}>H2</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleBold} style={styles.toolbarButton}>
+          <TouchableOpacity
+            onPress={() => {
+              insertText('**', '**');
+            }}
+            style={styles.toolbarButton}>
             <FeatherIcons
               name={'bold'}
               size={moderateScale(22)}
               color="black"
             />
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleItalic} style={styles.toolbarButton}>
+          <TouchableOpacity
+            onPress={() => {
+              insertText('*', '*');
+            }}
+            style={styles.toolbarButton}>
             <FeatherIcons
               name={'italic'}
               size={moderateScale(22)}
               color="black"
             />
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleList} style={styles.toolbarButton}>
+          <TouchableOpacity
+            onPress={() => {
+              insertText('\n-  \n-  \n-  ');
+            }}
+            style={styles.toolbarButton}>
             <FeatherIcons
               name={'list'}
               size={moderateScale(22)}
               color="black"
             />
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleOlList} style={styles.toolbarButton}>
+          <TouchableOpacity
+            onPress={() => {
+              insertText('\n1.  \n2.  \n3.  \n4.  ');
+            }}
+            style={styles.toolbarButton}>
             <MaterialCommunityIcons
               name={'format-list-numbered'}
               size={moderateScale(22)}
@@ -864,7 +870,11 @@ const AddContent = () => {
               color="black"
             />
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleCode} style={styles.toolbarButton}>
+          <TouchableOpacity
+            onPress={() => {
+              insertText('\n``` \n', '\n \n```\n');
+            }}
+            style={styles.toolbarButton}>
             <FeatherIcons
               name={'code'}
               size={moderateScale(22)}
@@ -1049,7 +1059,6 @@ const styles = StyleSheet.create({
   toolbarButton: {
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
     width: moderateScale(35),
     borderRadius: moderateScale(5),
   },

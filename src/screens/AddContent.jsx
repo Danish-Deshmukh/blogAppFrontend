@@ -638,7 +638,6 @@ const AddContent = () => {
               )}
             </View>
           </View>
-
           {/* Model for select Upload Images */}
           <Modal
             isVisible={uploadImageModel}

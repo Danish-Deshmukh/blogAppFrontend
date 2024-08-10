@@ -18,8 +18,8 @@ import {useQueryClient} from '@tanstack/react-query';
 
 const PreviewScreen = item => {
   const post = item.route.params;
-  console.log('=======================');
-  console.log(post);
+  // console.log('=======================');
+  // console.log(post);
 
   const {isAdmin, logout, userInfo, REST_API_BASE_URL} =
     useContext(AuthContext);

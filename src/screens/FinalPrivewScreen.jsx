@@ -8,31 +8,30 @@ import {
   ActivityIndicator,
   Image,
   TextInput,
+  Alert,
 } from 'react-native';
 import Modal from 'react-native-modal';
 import React, {useContext, useEffect, useState} from 'react';
-import {useQuery} from '@tanstack/react-query';
+import {useQuery, useQueryClient} from '@tanstack/react-query';
 import {moderateScale, verticalScale} from 'react-native-size-matters';
 
 // Icons
-import FeatherIcons from 'react-native-vector-icons/Feather';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {useNavigation} from '@react-navigation/native';
 import {AuthContext} from '../context/AuthContext';
-import {ScrollView} from 'react-native-gesture-handler';
 import BlackButton from '../components/BlackButton';
-import WhiteButton from '../components/WhiteButton';
-import WhiteButtonLoading from '../components/WhiteButtonLoading';
 import * as Yup from 'yup';
+import axios from 'axios';
 export default function FinalPrivewScreen(item) {
   const post = item.route.params;
   const content = post.content;
-  console.log('___________________');
-  console.log(post);
+  // console.log('___________________');
+  // console.log(post);
   const navigation = useNavigation();
-  const {REST_API_BASE_URL} = useContext(AuthContext);
+  const client = useQueryClient();
+  const {userInfo, logout, REST_API_BASE_URL} = useContext(AuthContext);
   // QUERY AND STATES FOR FETCHING CATEGORIES
   const [category, setCategory] = useState(null);
   const [categoryId, setCategoryId] = useState();
@@ -64,12 +63,21 @@ export default function FinalPrivewScreen(item) {
   const mergeImageUrls = () => {
     const mergedImages = [...imagesFromContent, ...imagesFormPost];
     const uniqueImages = Array.from(new Set(mergedImages)); // Remove duplicates
-    setImagesUrls(uniqueImages);
+
+    // converting image array into image Object
+    const imageObject = uniqueImages.map(url => ({
+      id: null,
+      url: url,
+    }));
+    setImagesUrls(imageObject);
   };
 
   const [isEditing, setIsEditing] = useState(false);
   const [showEditImageMenu, setShowEditImageMenu] = useState(false);
-
+  const Refresh = () => {
+    client.invalidateQueries(['posts']);
+    client.invalidateQueries(['postDetail']);
+  };
   useEffect(() => {
     const titleText = extractTitleOrText(content);
     if (titleEdited === '') {
@@ -101,7 +109,7 @@ export default function FinalPrivewScreen(item) {
     } else if (plainTextMatch) {
       return plainTextMatch[0].trim();
     } else {
-      return 'no title';
+      return '';
     }
   };
   const extractDescOrText = markdown => {
@@ -116,7 +124,7 @@ export default function FinalPrivewScreen(item) {
     } else if (plainTextMatch) {
       return plainTextMatch[0].trim();
     } else {
-      return 'no desc';
+      return '';
     }
   };
   const extractImageUrl = markdown => {
@@ -149,7 +157,7 @@ export default function FinalPrivewScreen(item) {
     try {
       await userSchema.validate({categoryId}, {abortEarly: false});
 
-      console.log('post created');
+      console.log('post Validated');
 
       setErrors({});
     } catch (error) {
@@ -169,8 +177,96 @@ export default function FinalPrivewScreen(item) {
       }
     }
   };
+
+  const config = {
+    headers: {
+      Authorization: `Bearer ${userInfo.accessToken}`,
+    },
+  };
   const createPost = () => {
     validateing();
+
+    const titleSend = titleEdited != '' ? titleEdited : title;
+    const descriptionSend =
+      descriptionEdited != '' ? descriptionEdited : description;
+    const contentSend = content;
+    const categoryIdSend = categoryId;
+    const coverImageSend = imageUrlEdited != '' ? imageUrlEdited : imageUrl;
+    const imagesUrlsSend = imagesUrls;
+
+    console.log('images urls ');
+    console.log(coverImageSend);
+    console.log(imagesUrls);
+
+    const postSend = {
+      title: titleSend,
+      description: descriptionSend,
+      content: contentSend,
+      categoryId: categoryIdSend,
+      coverImage: coverImageSend,
+      imagesUrls: imagesUrlsSend,
+    };
+    console.log('++++++++++++++++++++++');
+    console.log(postSend.title);
+    console.log(postSend.description);
+    console.log(postSend.content);
+    console.log(postSend.categoryId);
+    console.log(postSend.coverImage);
+    console.log(postSend.imagesUrls);
+
+    axios
+      .post(`${REST_API_BASE_URL}/posts`, postSend, config)
+      .then(res => {
+        console.log(res);
+        Refresh();
+        navigation.navigate('Home');
+      })
+      .catch(e => {
+        console.log(`error------------> ${e}`);
+        console.log(e.response.status);
+        if (e.response.status === 404) {
+          pageNotFoundError();
+        }
+
+        if (e.response.status === 401) {
+          tockenExpire();
+        }
+      });
+  };
+
+  const pageNotFoundError = () => {
+    Alert.alert(
+      'Post Not found',
+      'Post is not present in the database you need to restart the application to see the changes ',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'OK',
+        },
+      ],
+    );
+  };
+  const tockenExpire = () => {
+    Alert.alert(
+      'Token Expire',
+      'You need to login again to preform this operation, Press "OK" to logout ',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'OK',
+          onPress: () => {
+            logout();
+            navigation.navigate('Login');
+          },
+        },
+      ],
+    );
   };
   return (
     <View
@@ -394,7 +490,7 @@ export default function FinalPrivewScreen(item) {
                 Uploaded Images
               </Text>
 
-              {imagesUrls.length === 0 || imagesUrls == undefined ? ( 
+              {imagesUrls.length === 0 || imagesUrls == undefined ? (
                 // If the Images are not available
                 <View
                   style={{

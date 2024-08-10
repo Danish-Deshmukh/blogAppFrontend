@@ -203,55 +203,55 @@ const AddBlog = item => {
 
   const getCategoryById = async () => {};
 
-  // const submitPost = () => {
-  //   console.log('title : ' + title);
-  //   console.log('descriptiton : ' + description);
-  //   console.log('content : ' + content);
-  //   console.log('categoryId : ' + categoryId);
+  const submitPost = () => {
+    console.log('title : ' + title);
+    console.log('descriptiton : ' + description);
+    console.log('content : ' + content);
+    console.log('categoryId : ' + categoryId);
 
-  //   console.log('submit button called');
-  //   console.log(REST_API_BASE_URL);
+    console.log('submit button called');
+    console.log(REST_API_BASE_URL);
 
-  //   const formData = new FormData();
-  //   const image = imageDetail;
+    const formData = new FormData();
+    const image = imageDetail;
 
-  //   formData.append('file', {
-  //     uri: image.assets?.[0]?.uri,
-  //     type: image.assets?.[0]?.type,
-  //     name: image.assets?.[0]?.fileName,
-  //     fileName: image.assets?.[0]?.fileName,
-  //   });
+    formData.append('file', {
+      uri: image.assets?.[0]?.uri,
+      type: image.assets?.[0]?.type,
+      name: image.assets?.[0]?.fileName,
+      fileName: image.assets?.[0]?.fileName,
+    });
 
-  //   const postDto = JSON.stringify({
-  //     title: title,
-  //     description: description,
-  //     content: content,
-  //     categoryId: categoryId,
-  //   });
+    const postDto = JSON.stringify({
+      title: title,
+      description: description,
+      content: content,
+      categoryId: categoryId,
+    });
 
-  //   formData.append('postDto', postDto);
+    formData.append('postDto', postDto);
 
-  //   axios
-  //     .post(`${REST_API_BASE_URL}/posts`, formData, config)
-  //     .then(res => {
-  //       console.log(res);
-  //       Refresh();
-  //       ClearDataFromUI();
-  //       navigation.navigate('Home');
-  //     })
-  //     .catch(e => {
-  //       console.log(`error------------> ${e}`);
+    axios
+      .post(`${REST_API_BASE_URL}/posts`, formData, config)
+      .then(res => {
+        console.log(res);
+        Refresh();
+        ClearDataFromUI();
+        navigation.navigate('Home');
+      })
+      .catch(e => {
+        console.log(`error------------> ${e}`);
 
-  //       console.log(e.response.status);
-  //       if (e.response.status === 404) {
-  //         pageNotFoundError();
-  //       }
+        console.log(e.response.status);
+        if (e.response.status === 404) {
+          pageNotFoundError();
+        }
 
-  //       if (e.response.status === 401) {
-  //         tockenExpire();
-  //       }
-  //     });
-  // };
+        if (e.response.status === 401) {
+          tockenExpire();
+        }
+      });
+  };
   const updatePost = (title, description, content) => {
     console.log('Update method called');
     const ID = post.id;

@@ -34,7 +34,10 @@ import WhiteButtonLoading from '../components/WhiteButtonLoading';
 import {AuthContext} from '../context/AuthContext';
 import axios from 'axios';
 
-const AddContent = () => {
+// This is Add or Update content Screen
+const AddContent = (item) => {
+  const post = item.route.params;
+  
   const navigation = useNavigation();
   const {userInfo, logout, REST_API_BASE_URL} = useContext(AuthContext);
   // console.log(userInfo)

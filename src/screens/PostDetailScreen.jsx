@@ -31,6 +31,8 @@ import ShowPostComments from './ShowPostComments';
 
 export default function PostDetailScreen(item) {
   const post = item.route.params;
+  console.log('---------->');
+  console.log(post);
   const {isAdmin, userInfo, logout, REST_API_BASE_URL} =
     useContext(AuthContext);
   const [auther, setAuther] = useState('Deshmukh');
@@ -77,24 +79,22 @@ export default function PostDetailScreen(item) {
     queryFn: () => fetchPostById(id),
   });
 
-  console.log(`${REST_API_BASE_URL}/image/${data?.image}`);
-  if (postDetailLoading) {
-    return (
-      <ActivityIndicator style={{flex: 1}} size={'large'} color={'black'} />
-    );
-  }
-  if (postDetailError) {
-    return (
-      <Text
-        style={{
-          flex: 1,
-          alignSelf: 'center',
-          color: 'red',
-        }}>
-        {postDetailError}
-      </Text>
-    );
-  }
+  const [coverImage, setCoverIamge] = useState();
+
+  useEffect(() => {
+    imageSetter();
+  }, [data]);
+  const imageSetter = () => {
+    const url = data?.coverImage;
+    if (url === undefined || url === null || url === '') {
+      return;
+    }
+    if (url.startsWith('https://')) {
+      return;
+    } else {
+      setCoverIamge(`${REST_API_BASE_URL}/image/${data.coverImage}`);
+    }
+  };
 
   const Refresh = () => {
     client.invalidateQueries(['posts']);
@@ -107,7 +107,8 @@ export default function PostDetailScreen(item) {
     },
   };
   const updatePost = () => {
-    navigation.navigate('AddBlog', post);
+    // navigation.navigate('AddContent');
+    navigation.navigate('AddContent', post);
     Refresh();
   };
   const deletePost = () => {
@@ -184,6 +185,23 @@ export default function PostDetailScreen(item) {
     );
   };
 
+  if (postDetailLoading) {
+    return (
+      <ActivityIndicator style={{flex: 1}} size={'large'} color={'black'} />
+    );
+  }
+  if (postDetailError) {
+    return (
+      <Text
+        style={{
+          flex: 1,
+          alignSelf: 'center',
+          color: 'red',
+        }}>
+        {postDetailError}
+      </Text>
+    );
+  }
   return (
     <View style={{flex: 1}}>
       {/* Header */}
@@ -424,7 +442,7 @@ export default function PostDetailScreen(item) {
 
         {/* <Text style={[styles.text, styles.headingText]}>{data.title}</Text> */}
         {/* <Text style={[styles.text, styles.autherText]}>auther: {auther}</Text> */}
-        {data.coverImage && (
+        {coverImage && (
           <View>
             <TouchableOpacity onPress={() => setFullViewImage(true)}>
               <Image
@@ -435,7 +453,7 @@ export default function PostDetailScreen(item) {
                   marginBottom: moderateScale(10),
                 }}
                 source={{
-                  uri: `${REST_API_BASE_URL}/image/${data.coverImage}`,
+                  uri: coverImage,
                 }}
               />
             </TouchableOpacity>
@@ -443,7 +461,7 @@ export default function PostDetailScreen(item) {
             <ImageView
               images={[
                 {
-                  uri: `${REST_API_BASE_URL}/image/${data.coverImage}`,
+                  uri: coverImage,
                 },
               ]}
               visible={fullViewImage}

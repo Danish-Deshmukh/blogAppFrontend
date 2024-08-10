@@ -534,7 +534,7 @@ export default function Home() {
       {isAdmin && (
         <TouchableOpacity
           onPress={() => {
-            navigation.navigate('AddConent');
+            navigation.navigate('AddContent');
           }}
           style={{
             position: 'absolute',

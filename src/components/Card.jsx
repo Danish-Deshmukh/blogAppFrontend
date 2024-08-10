@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useContext} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {moderateScale, verticalScale} from 'react-native-size-matters';
 import {useNavigation} from '@react-navigation/native';
 import {AuthContext} from '../context/AuthContext';
@@ -14,6 +14,24 @@ import {AuthContext} from '../context/AuthContext';
 export default function Card({item}) {
   const {REST_API_BASE_URL} = useContext(AuthContext);
   const navigation = useNavigation();
+
+  const [coverImage, setCoverIamge] = useState();
+
+  useEffect(() => {
+    imageSetter();
+  }, [item]);
+  const imageSetter = () => {
+    const url = item?.coverImage;
+    if (url === undefined || url === null || url === '') {
+      return;
+    }
+    if (url.startsWith('https://')) {
+      setCoverIamge(item.coverImage);
+    } else {
+      setCoverIamge(`${REST_API_BASE_URL}/image/${item.coverImage}`);
+    }
+  };
+
   return (
     <TouchableOpacity
       onPress={() => {
@@ -76,16 +94,14 @@ export default function Card({item}) {
             height: '30%',
             width: '90%',
           }}>
-          {item.coverImage && (
+          {coverImage && (
             <Image
               style={{
                 width: '100%',
                 height: '100%',
                 borderRadius: moderateScale(2),
               }}
-              source={{
-                uri: `${REST_API_BASE_URL}/image/${item.coverImage}`,
-              }}
+              source={{uri: coverImage}}
             />
           )}
         </View>

@@ -24,6 +24,8 @@ import {AuthContext} from '../context/AuthContext';
 import BlackButton from '../components/BlackButton';
 import * as Yup from 'yup';
 import axios from 'axios';
+import WhiteButtonLoading from '../components/WhiteButtonLoading';
+import BlackButtonLoading from '../components/BlackButtonLoading';
 export default function FinalPrivewScreen(item) {
   const post = item.route.params;
   const content = post.content;
@@ -55,6 +57,8 @@ export default function FinalPrivewScreen(item) {
   const [imageUrlEdited, setImageUrlEdited] = useState('');
 
   const [imagesUrls, setImagesUrls] = useState([]);
+  console.log(imagesUrls);
+  console.log(imagesUrls.url);
   const [imagesFromContent, setImagesFromContent] = useState([]);
   const imagesFormPost = post.images;
   useEffect(() => {
@@ -183,8 +187,10 @@ export default function FinalPrivewScreen(item) {
       Authorization: `Bearer ${userInfo.accessToken}`,
     },
   };
+  const [submitPostLoading, setSubmitPostLoading] = useState(false);
   const createPost = () => {
     validateing();
+    setSubmitPostLoading(true);
 
     const titleSend = titleEdited != '' ? titleEdited : title;
     const descriptionSend =
@@ -220,10 +226,12 @@ export default function FinalPrivewScreen(item) {
         console.log(res);
         Refresh();
         navigation.navigate('Home');
+        setSubmitPostLoading(false);
       })
       .catch(e => {
         console.log(`error------------> ${e}`);
         console.log(e.response.status);
+        setSubmitPostLoading(false);
         if (e.response.status === 404) {
           pageNotFoundError();
         }
@@ -232,6 +240,7 @@ export default function FinalPrivewScreen(item) {
           tockenExpire();
         }
       });
+    setSubmitPostLoading(false);
   };
 
   const pageNotFoundError = () => {
@@ -474,6 +483,7 @@ export default function FinalPrivewScreen(item) {
               </TouchableOpacity>
             </View>
 
+            {/* image items */}
             <View
               style={{
                 // borderWidth: 1,
@@ -517,7 +527,7 @@ export default function FinalPrivewScreen(item) {
                     <TouchableOpacity
                       onPress={() => {
                         setImageUrl('');
-                        setImageUrlEdited(item);
+                        setImageUrlEdited(item.url); // Use item.url instead of item
                         setShowEditImageMenu(false);
                       }}
                       style={{
@@ -525,7 +535,8 @@ export default function FinalPrivewScreen(item) {
                         alignItems: 'center',
                         margin: 5,
                       }}>
-                      {(item === imageUrl || item === imageUrlEdited) && (
+                      {(item.url === imageUrl ||
+                        item.url === imageUrlEdited) && (
                         <View
                           style={{
                             backgroundColor: 'black',
@@ -542,7 +553,7 @@ export default function FinalPrivewScreen(item) {
                       )}
 
                       <Image
-                        source={{uri: item}}
+                        source={{uri: item.url}} // Use item.url instead of item
                         style={{
                           width: moderateScale(70),
                           height: moderateScale(50),
@@ -851,8 +862,11 @@ export default function FinalPrivewScreen(item) {
           alignItems: 'center',
           alignSelf: 'center',
         }}>
-        <BlackButton title={'Post'} onPress={createPost} />
-        {/* <WhiteButtonLoading /> */}
+        {submitPostLoading ? (
+          <BlackButtonLoading />
+        ) : (
+          <BlackButton title={'Post'} onPress={createPost} />
+        )}
       </View>
     </View>
   );

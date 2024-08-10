@@ -201,7 +201,7 @@ export default function Navigation() {
           }}
         />
         <NativeSTACK.Screen
-          name="AddConent"
+          name="AddContent"
           component={AddContent}
           options={{
             headerShown: false,

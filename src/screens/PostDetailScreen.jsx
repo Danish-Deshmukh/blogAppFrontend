@@ -31,8 +31,8 @@ import ShowPostComments from './ShowPostComments';
 
 export default function PostDetailScreen(item) {
   const post = item.route.params;
-  console.log('---------->');
-  console.log(post);
+  // console.log('---------->');
+  // console.log(post);
   const {isAdmin, userInfo, logout, REST_API_BASE_URL} =
     useContext(AuthContext);
   const [auther, setAuther] = useState('Deshmukh');
@@ -107,7 +107,6 @@ export default function PostDetailScreen(item) {
     },
   };
   const updatePost = () => {
-    // navigation.navigate('AddContent');
     navigation.navigate('AddContent', post);
     Refresh();
   };

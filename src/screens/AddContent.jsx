@@ -35,9 +35,9 @@ import {AuthContext} from '../context/AuthContext';
 import axios from 'axios';
 
 // This is Add or Update content Screen
-const AddContent = (item) => {
+const AddContent = item => {
   const post = item.route.params;
-  
+
   const navigation = useNavigation();
   const {userInfo, logout, REST_API_BASE_URL} = useContext(AuthContext);
   // console.log(userInfo)
@@ -51,6 +51,7 @@ const AddContent = (item) => {
 
   const [errors, setErrors] = useState({});
   const [content, setContent] = useState('');
+  const [isForUpdate, setIsForUpdate] = useState(false);
   const [swapToolbar, setSwapToolbar] = useState(true);
   const [selection, setSelection] = useState({start: 0, end: 0});
   const insertText = (prefix, suffix = '') => {
@@ -59,6 +60,17 @@ const AddContent = (item) => {
     const end = content.slice(selection.end);
     setContent(`${start}${prefix}${selectedText}${suffix}${end}`);
   };
+
+  // If the post is for update then this useeffect going to work
+  useEffect(() => {
+    if (post != undefined) {
+      console.log(post?.content);
+      setContent(post.content);
+      setIsForUpdate(true);
+      const extractedImageUrls = post.imagesUrls.map(image => image.url);
+      setImages(extractedImageUrls);
+    }
+  }, [post]);
 
   // Adding back handler
   // If your press back accidentaly then it will show alert
@@ -141,65 +153,62 @@ const AddContent = (item) => {
   };
 
   // This method was use for when we want to store images into the local server, but now it's not gonna work
-  const uploadImage = () => {
-    const config = {
-      headers: {
-        Authorization: `Bearer ${userInfo.accessToken}`,
-        'Content-Type': 'multipart/form-data',
-      },
-    };
-    console.log('-------------->');
-    console.log(REST_API_BASE_URL);
-    console.log(image);
-    console.log(imageDetail);
+  // const uploadImage = () => {
+  //   const config = {
+  //     headers: {
+  //       Authorization: `Bearer ${userInfo.accessToken}`,
+  //       'Content-Type': 'multipart/form-data',
+  //     },
+  //   };
 
-    setUploadImageLoading(true);
+  //   setUploadImageLoading(true);
 
-    if (imageDetail === null) {
-      setUploadImageModel(false);
-      setUploadImageLoading(false);
-      ToastAndroid.show('You need to select image for upload', 1000);
-      return;
-    }
+  //   if (imageDetail === null) {
+  //     setUploadImageModel(false);
+  //     setUploadImageLoading(false);
+  //     ToastAndroid.show('You need to select image for upload', 1000);
+  //     return;
+  //   }
 
-    const formData = new FormData();
-    formData.append('file', {
-      uri: imageDetail.assets?.[0]?.uri,
-      type: imageDetail.assets?.[0]?.type,
-      name: imageDetail.assets?.[0]?.fileName,
-      fileName: imageDetail.assets?.[0]?.fileName,
-    });
+  //   const formData = new FormData();
+  //   formData.append('file', {
+  //     uri: imageDetail.assets?.[0]?.uri,
+  //     type: imageDetail.assets?.[0]?.type,
+  //     name: imageDetail.assets?.[0]?.fileName,
+  //     fileName: imageDetail.assets?.[0]?.fileName,
+  //   });
 
-    axios
-      .post(`${REST_API_BASE_URL}/uploadImage`, formData, config)
-      .then(res => {
-        console.log('Respone --> ', res.data);
-        const imageUrl = `${REST_API_BASE_URL}/image/${res.data}`;
-        setImages([...images, imageUrl]);
-        setUploadImageLoading(false);
-        setUploadImageModel(false);
-      })
-      .catch(e => {
-        console.log('Error --> ', e);
-        setUploadImageLoading(false);
-        setUploadImageModel(false);
+  //   axios
+  //     .post(`${REST_API_BASE_URL}/uploadImage`, formData, config)
+  //     .then(res => {
+  //       console.log('Respone --> ', res.data);
+  //       const imageUrl = `${REST_API_BASE_URL}/image/${res.data}`;
+  //       setImages([...images, imageUrl]);
+  //       setUploadImageLoading(false);
+  //       setUploadImageModel(false);
+  //     })
+  //     .catch(e => {
+  //       console.log('Error --> ', e);
+  //       setUploadImageLoading(false);
+  //       setUploadImageModel(false);
 
-        if (e.response) {
-          // Server-side error
-          if (e.response.status === 404) {
-            pageNotFoundError();
-          } else if (e.response.status === 401) {
-            tockenExpire();
-          }
-        } else if (e.request) {
-          // Network error
-          console.error('Network error: ', e.request);
-        } else {
-          // Something else
-          console.error('Error: ', e.message);
-        }
-      });
-  };
+  //       if (e.response) {
+  //         // Server-side error
+  //         if (e.response.status === 404) {
+  //           pageNotFoundError();
+  //         } else if (e.response.status === 401) {
+  //           tockenExpire();
+  //         }
+  //       } else if (e.request) {
+  //         // Network error
+  //         console.error('Network error: ', e.request);
+  //       } else {
+  //         // Something else
+  //         console.error('Error: ', e.message);
+  //       }
+  //     });
+  // };
+
   const API_KEY = '65ec53011a5c2b867880fd13292aaa64';
   const url = `https://api.imgbb.com/1/upload?key=${API_KEY}`;
   const uploadImagebb = async () => {
@@ -260,12 +269,25 @@ const AddContent = (item) => {
     try {
       await userSchema.validate({content}, {abortEarly: false});
 
-      const postContent = {
-        content: content,
-        images: images,
-        forUpdate: false,
-      };
-      navigation.navigate('PreviewScreen', postContent);
+      if (isForUpdate) {
+        const postContent = {
+          id: post.id,
+          title: post.title,
+          description: post.description,
+          content: content,
+          images: images,
+          categoryId: post.categoryId,
+          forUpdate: isForUpdate,
+        };
+        navigation.navigate('PreviewScreen', postContent);
+      } else {
+        const postContent = {
+          content: content,
+          images: images,
+          forUpdate: isForUpdate,
+        };
+        navigation.navigate('PreviewScreen', postContent);
+      }
 
       setErrors({});
     } catch (error) {

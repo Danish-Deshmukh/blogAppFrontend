@@ -24,12 +24,11 @@ import {AuthContext} from '../context/AuthContext';
 import BlackButton from '../components/BlackButton';
 import * as Yup from 'yup';
 import axios from 'axios';
-import WhiteButtonLoading from '../components/WhiteButtonLoading';
 import BlackButtonLoading from '../components/BlackButtonLoading';
 export default function FinalPrivewScreen(item) {
   const post = item.route.params;
   const content = post.content;
-  // console.log('___________________');
+  // console.log('Final preview screen___________________');
   // console.log(post);
   const navigation = useNavigation();
   const client = useQueryClient();
@@ -57,8 +56,6 @@ export default function FinalPrivewScreen(item) {
   const [imageUrlEdited, setImageUrlEdited] = useState('');
 
   const [imagesUrls, setImagesUrls] = useState([]);
-  console.log(imagesUrls);
-  console.log(imagesUrls.url);
   const [imagesFromContent, setImagesFromContent] = useState([]);
   const imagesFormPost = post.images;
   useEffect(() => {
@@ -224,6 +221,79 @@ export default function FinalPrivewScreen(item) {
       .post(`${REST_API_BASE_URL}/posts`, postSend, config)
       .then(res => {
         console.log(res);
+        Refresh();
+        navigation.navigate('Home');
+        setSubmitPostLoading(false);
+      })
+      .catch(e => {
+        console.log(`error------------> ${e}`);
+        console.log(e.response.status);
+        setSubmitPostLoading(false);
+        if (e.response.status === 404) {
+          pageNotFoundError();
+        }
+
+        if (e.response.status === 401) {
+          tockenExpire();
+        }
+      });
+    setSubmitPostLoading(false);
+  };
+
+  // Update Post api
+  useEffect(() => {
+    if (post.forUpdate) {
+      console.log('THis post is for update');
+      console.log(post.id);
+      setTitle(post.title);
+      if (post.description != '') {
+        setDescription(post.description);
+      }
+      setCategoryId(post.categoryId);
+      getCategory(post.categoryId);
+    }
+  }, [post]);
+  const getCategory = async id => {
+    const url = `${REST_API_BASE_URL}/categories/${id}`;
+    const options = {
+      method: 'GET',
+    };
+    const res = await fetch(url, options);
+    if (!res.ok) {
+      throw new Error(`Faild to fetch Post by ID = ${id}`);
+    }
+    const json = await res.json();
+    setCategory(json);
+    return;
+  };
+  const updatePost = async () => {
+    console.log('UpdatePost called');
+    validateing();
+    setSubmitPostLoading(true);
+
+    const titleSend = titleEdited != '' ? titleEdited : title;
+    const descriptionSend =
+      descriptionEdited != '' ? descriptionEdited : description;
+    const contentSend = content;
+    const categoryIdSend = categoryId;
+    const coverImageSend = imageUrlEdited != '' ? imageUrlEdited : imageUrl;
+    const imagesUrlsSend = imagesUrls;
+
+    const postSend = {
+      title: titleSend,
+      description: descriptionSend,
+      content: contentSend,
+      categoryId: categoryIdSend,
+      coverImage: coverImageSend,
+      imagesUrls: imagesUrlsSend,
+    };
+    console.log('imGE URLS ________>');
+    console.log(imagesUrls);
+    console.log(post.id);
+
+    await axios
+      .put(`${REST_API_BASE_URL}/posts/${post.id}`, postSend, config)
+      .then(res => {
         Refresh();
         navigation.navigate('Home');
         setSubmitPostLoading(false);
@@ -409,7 +479,15 @@ export default function FinalPrivewScreen(item) {
 
         {/* // Edit Button */}
         <TouchableOpacity
-          onPress={() => setIsEditing(!isEditing)}
+          onPress={() => {
+            setIsEditing(!isEditing);
+            if (titleEdited === '') {
+              setTitleEdited(title);
+            }
+            if (descriptionEdited === '') {
+              setDescriptionEdited(description);
+            }
+          }}
           style={{
             borderWidth: 0.5,
             borderRadius: moderateScale(10),
@@ -534,6 +612,8 @@ export default function FinalPrivewScreen(item) {
                         justifyContent: 'center',
                         alignItems: 'center',
                         margin: 5,
+                        elevation: 1,
+                        // borderWidth: 1,
                       }}>
                       {(item.url === imageUrl ||
                         item.url === imageUrlEdited) && (
@@ -865,7 +945,13 @@ export default function FinalPrivewScreen(item) {
         {submitPostLoading ? (
           <BlackButtonLoading />
         ) : (
-          <BlackButton title={'Post'} onPress={createPost} />
+          <>
+            {post.forUpdate ? (
+              <BlackButton title={'Update'} onPress={updatePost} />
+            ) : (
+              <BlackButton title={'Post'} onPress={createPost} />
+            )}
+          </>
         )}
       </View>
     </View>

@@ -15,6 +15,7 @@ import {AuthContext} from '../context/AuthContext';
 import axios from 'axios';
 import {useNavigation} from '@react-navigation/native';
 import {useQueryClient} from '@tanstack/react-query';
+import BlackButton from '../components/BlackButton';
 
 const PreviewScreen = item => {
   const post = item.route.params;
@@ -305,15 +306,15 @@ const PreviewScreen = item => {
           borderTopLeftRadius: moderateScale(20),
           zIndex: 1,
         }}>
-        {post.forUpdate === true ? (
-          <TouchableOpacity onPress={FinalPrivewScreen} style={styles.button}>
-            <Text style={styles.buttonTxt}>Update</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity onPress={FinalPrivewScreen} style={styles.button}>
-            <Text style={styles.buttonTxt}>Next</Text>
-          </TouchableOpacity>
-        )}
+        <View
+          style={{
+            height: moderateScale(35),
+            // borderWidth: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}>
+          <BlackButton title={'Next'} onPress={FinalPrivewScreen} />
+        </View>
       </Animated.View>
     </>
   );

@@ -275,6 +275,7 @@ const AddContent = item => {
           title: post.title,
           description: post.description,
           content: content,
+          coverImage: post.coverImage,
           images: images,
           categoryId: post.categoryId,
           forUpdate: isForUpdate,

@@ -244,10 +244,12 @@ export default function FinalPrivewScreen(item) {
   useEffect(() => {
     if (post.forUpdate) {
       console.log('THis post is for update');
-      console.log(post.id);
-      setTitle(post.title);
+
       if (post.description != '') {
         setDescription(post.description);
+      }
+      if (post.coverImage != '') {
+        setImageUrl(post.coverImage);
       }
       setCategoryId(post.categoryId);
       getCategory(post.categoryId);
@@ -287,9 +289,6 @@ export default function FinalPrivewScreen(item) {
       coverImage: coverImageSend,
       imagesUrls: imagesUrlsSend,
     };
-    console.log('imGE URLS ________>');
-    console.log(imagesUrls);
-    console.log(post.id);
 
     await axios
       .put(`${REST_API_BASE_URL}/posts/${post.id}`, postSend, config)

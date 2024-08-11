@@ -11,11 +11,16 @@ import {moderateScale, verticalScale} from 'react-native-size-matters';
 import {useNavigation} from '@react-navigation/native';
 import {AuthContext} from '../context/AuthContext';
 
+// Icons
+import FeatherIcons from 'react-native-vector-icons/Feather';
+import Fontisto from 'react-native-vector-icons/Fontisto';
+
 export default function Card({item}) {
   const {REST_API_BASE_URL} = useContext(AuthContext);
   const navigation = useNavigation();
 
   const [coverImage, setCoverIamge] = useState();
+  const [isBookMark, setIsBookMark] = useState(false);
 
   useEffect(() => {
     imageSetter();
@@ -34,9 +39,7 @@ export default function Card({item}) {
 
   return (
     <TouchableOpacity
-      onPress={() => {
-        navigation.navigate('PostDetailScreen', item);
-      }}
+      onPress={() => navigation.navigate('PostDetailScreen', item)}
       style={{
         margin: moderateScale(5),
         borderRadius: moderateScale(5),
@@ -46,6 +49,26 @@ export default function Card({item}) {
         backgroundColor: 'white',
         flexDirection: 'row',
       }}>
+      {/* // Bookmark Icon */}
+      <TouchableOpacity
+        onPress={() => setIsBookMark(!isBookMark)}
+        style={{
+          position: 'absolute',
+          right: moderateScale(0),
+          top: moderateScale(5),
+          zIndex: 1,
+          // borderWidth: 1,
+          width: '15%',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
+        <Fontisto
+          name={isBookMark ? 'bookmark-alt' : 'bookmark'}
+          size={moderateScale(25)}
+          // color={'black'}
+        />
+      </TouchableOpacity>
+
       {/* Title and desc container */}
       <View
         style={{
@@ -108,7 +131,35 @@ export default function Card({item}) {
       </View>
 
       {/* Comment and Bookmark button container  */}
-      <View></View>
+      <View
+        style={{
+          // borderWidth: 1,
+          position: 'absolute',
+          left: 0,
+          bottom: 0,
+          height: moderateScale(40),
+          width: moderateScale(60),
+          alignItems: 'center',
+          justifyContent: 'space-evenly',
+          flexDirection: 'row',
+        }}>
+        <View
+          style={{
+            justifyContent: 'center',
+            alignItems: 'center',
+            flexDirection: 'row',
+            gap: moderateScale(5),
+          }}>
+          <FeatherIcons
+            name={'message-circle'}
+            size={moderateScale(20)}
+            // color="gray"
+          />
+          <Text style={{fontSize: moderateScale(17)}}>
+            {item.comments.length}
+          </Text>
+        </View>
+      </View>
     </TouchableOpacity>
   );
 }

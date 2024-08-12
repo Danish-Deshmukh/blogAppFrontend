@@ -17,8 +17,6 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import OcticonsIcon from 'react-native-vector-icons/Octicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import CommentsCard from './screens/CommentsCard';
-import ShowPostComments from './screens/ShowPostComments';
 import CheatSheet from './forDelete/CheatSheet';
 import AddUrlScreen from './screens/AddUrlScreen';
 import ForTesting from './forDelete/ForTesting';
@@ -70,7 +68,8 @@ export function BottomTab() {
             name="Bookmark"
             component={Bookmark}
             options={{
-              headerShown: false,
+              headerShown: true,
+              headerTitle: 'Bookmarks',
               tabBarLabel: () => {},
               tabBarIcon: ({focused}) => (
                 <Ionicons
@@ -186,13 +185,6 @@ export default function Navigation() {
           }}
         />
         <NativeSTACK.Screen
-          name="CommentCard"
-          component={CommentsCard}
-          options={{
-            headerShown: false,
-          }}
-        />
-        <NativeSTACK.Screen
           name="AddBlog"
           component={AddBlog}
           options={{
@@ -205,7 +197,7 @@ export default function Navigation() {
           component={AddContent}
           options={{
             headerShown: false,
-            animation: 'slide_from_right'
+            animation: 'slide_from_right',
           }}
         />
         <NativeSTACK.Screen
@@ -232,16 +224,7 @@ export default function Navigation() {
           options={{
             headerShown: true,
             headerTitle: 'Final preview screen',
-            animation: 'slide_from_right'
-          }}
-        />
-        <NativeSTACK.Screen
-          name="ShowPostComments"
-          component={ShowPostComments}
-          options={{
-            headerShown: false,
-            headerTitle: 'Back',
-            animation: 'slide_from_bottom',
+            animation: 'slide_from_right',
           }}
         />
         <NativeSTACK.Screen

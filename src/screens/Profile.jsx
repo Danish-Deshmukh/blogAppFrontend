@@ -70,7 +70,7 @@ export default function Profile() {
       {/* EDIT PROFILE */}
       <Pressable
         onPress={() => {
-          navigation.navigate('ForTesting');
+          navigation.navigate('EditeProfile');
           // navigation.navigate('EditeProfile');
         }}
         style={{

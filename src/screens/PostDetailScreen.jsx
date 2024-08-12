@@ -24,15 +24,14 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 import axios from 'axios';
 import {AuthContext} from '../context/AuthContext';
 import {useQuery, useQueryClient} from '@tanstack/react-query';
-import {pageNotFoundError, tockenExpire} from '../CustomeError/Error';
 import ImageView from 'react-native-image-viewing';
 import Markdown from 'react-native-markdown-display';
-import ShowPostComments from './ShowPostComments';
+import ShowPostComments from '../components/ShowPostComments';
 
 export default function PostDetailScreen(item) {
   const post = item.route.params;
-  console.log('---------->');
-  console.log(post);
+  // console.log('---------->');
+  // console.log(post);
   const {isAdmin, userInfo, logout, REST_API_BASE_URL} =
     useContext(AuthContext);
   const [auther, setAuther] = useState('Deshmukh');
@@ -176,6 +175,7 @@ export default function PostDetailScreen(item) {
         {
           text: 'OK',
           onPress: () => {
+            setShowComments(false);
             logout();
             navigation.navigate('Login');
           },
@@ -221,7 +221,7 @@ export default function PostDetailScreen(item) {
         ]}>
         <TouchableOpacity
           onPress={() => {
-            navigation.navigate('Home');
+            navigation.goBack();
           }}
           style={{
             flexDirection: 'row',
@@ -308,11 +308,11 @@ export default function PostDetailScreen(item) {
                     position: 'absolute',
                     top: -10,
                     right: -10,
-                    backgroundColor: 'black',
-                    borderRadius: moderateScale(10),
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: moderateScale(5),
                     elevation: 10,
                   }}>
-                  {/* REFRESH BUTTON */}
+                  {/* Update BUTTON */}
                   <TouchableOpacity
                     onPress={() => {
                       setShowMenuModel(false);
@@ -336,10 +336,15 @@ export default function PostDetailScreen(item) {
 
                   {/* Divider */}
                   <View
-                    style={{backgroundColor: 'white', width: '100%', height: 1}}
+                    style={{
+                      backgroundColor: 'gray',
+                      width: '90%',
+                      height: 1,
+                      alignSelf: 'center',
+                    }}
                   />
 
-                  {/* ADD URL Button here */}
+                  {/* Delete Button here */}
                   <TouchableOpacity
                     onPress={() => {
                       setShowMenuModel(false);
@@ -563,7 +568,7 @@ const markdownStyles = StyleSheet.create({
     backgroundColor: 'white',
   },
   fence: {
-    // backgroundColor: 'white',
+    // backgroundColor: '#FFFF',
     marginVertical: moderateScale(10),
     borderWidth: 1,
     borderColor: 'gray',

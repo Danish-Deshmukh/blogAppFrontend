@@ -198,24 +198,6 @@ const ShowPostComments = ({item}) => {
         paddingBottom: 70,
         // borderWidth: 1
       }}>
-      {/* Comments header */}
-      {/* <View style={styles.commentsHeadContainer}>
-        <Text
-          style={{
-            fontSize: moderateScale(20),
-            color: 'black',
-            fontWeight: '700',
-          }}>
-          Comments
-        </Text>
-        <TouchableOpacity
-          onPress={() => {
-            setShowComments(false);
-            // navigation.goBack();
-          }}>
-          <AntDesign name={'close'} size={moderateScale(30)} color="black" />
-        </TouchableOpacity>
-      </View> */}
 
       {/* Comment Input */}
       <View

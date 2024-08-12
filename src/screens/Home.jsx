@@ -241,8 +241,8 @@ export default function Home() {
                 position: 'absolute',
                 top: -10,
                 right: -10,
-                backgroundColor: 'black',
-                borderRadius: moderateScale(10),
+                backgroundColor: '#FFFFFF',
+                borderRadius: moderateScale(5),
                 elevation: 10,
               }}>
               {/* REFRESH BUTTON */}
@@ -258,14 +258,19 @@ export default function Home() {
                   justifyContent: 'center',
                 }}>
                 <Text
-                  style={{color: 'white', fontWeight: 'bold', fontSize: 20}}>
+                  style={{color: 'black', fontWeight: 'bold', fontSize: 20}}>
                   Refresh
                 </Text>
               </TouchableOpacity>
 
               {/* Divider */}
               <View
-                style={{backgroundColor: 'white', width: '100%', height: 1}}
+                style={{
+                  backgroundColor: 'gray',
+                  width: '90%',
+                  height: 1,
+                  alignSelf: 'center',
+                }}
               />
 
               {/* ADD URL Button here */}
@@ -275,8 +280,6 @@ export default function Home() {
                   navigation.navigate('AddUrlScreen');
                 }}
                 style={{
-                  borderBottomWidth: 1,
-                  borderColor: 'white',
                   width: '100%',
                   height: '50%',
                   justifyContent: 'center',
@@ -284,7 +287,7 @@ export default function Home() {
                   // borderRadius: moderateScale(10),
                 }}>
                 <Text
-                  style={{color: 'white', fontWeight: 'bold', fontSize: 20}}>
+                  style={{color: 'black', fontWeight: 'bold', fontSize: 20}}>
                   Add url
                 </Text>
               </TouchableOpacity>

@@ -1,8 +1,11 @@
 import {
+  ActivityIndicator,
+  Alert,
   Image,
   Pressable,
   StyleSheet,
   Text,
+  ToastAndroid,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -14,16 +17,106 @@ import {AuthContext} from '../context/AuthContext';
 // Icons
 import FeatherIcons from 'react-native-vector-icons/Feather';
 import Fontisto from 'react-native-vector-icons/Fontisto';
+import axios from 'axios';
+import {useQuery, useQueryClient} from '@tanstack/react-query';
 
 export default function Card({item}) {
-  const {REST_API_BASE_URL} = useContext(AuthContext);
+  const {logout, userInfo, REST_API_BASE_URL} = useContext(AuthContext);
   const navigation = useNavigation();
-
+  const client = useQueryClient();
   const [coverImage, setCoverIamge] = useState();
+
+  // Bookmark states and methods
   const [isBookMark, setIsBookMark] = useState(false);
+  const [isBookMarkLoading, setIsBookMarkLoading] = useState(false);
+
+  const config = {
+    headers: {
+      Authorization: `Bearer ${userInfo.accessToken}`,
+    },
+  };
+  const bookmark = async () => {
+    setIsBookMarkLoading(true);
+    const body = {
+      userId: userInfo.userId,
+      postId: item.id,
+    };
+    await axios
+      .post(`${REST_API_BASE_URL}/bookmarks/add`, body, config)
+      .then(res => {
+        // console.log(res);
+        setIsBookMark(true);
+        ToastAndroid.show('Post added in the bookmark', 1000);
+        setIsBookMarkLoading(false);
+        client.invalidateQueries(['bookmarkedPosts']);
+      })
+      .catch(e => {
+        console.log(`register error --------------> ${e}`);
+        console.log(e.response.status);
+        setIsBookMarkLoading(false);
+
+        if (e.response.status >= 500) {
+          serverError();
+        }
+        if (e.response.status === 404) {
+          pageNotFoundError();
+        }
+
+        if (e.response.status === 401) {
+          tockenExpire();
+        }
+      });
+  };
+  const removeBookmark = async () => {
+    setIsBookMarkLoading(true);
+
+    const url = `${REST_API_BASE_URL}/bookmarks/remove?userId=${userInfo.userId}&postId=${item.id}`;
+
+    await axios
+      .delete(url, config)
+      .then(res => {
+        // console.log(res);
+        setIsBookMark(false);
+        ToastAndroid.show('Post remove from the bookmark', 1000);
+        setIsBookMarkLoading(false);
+        client.invalidateQueries(['bookmarkedPosts']);
+      })
+      .catch(e => {
+        console.log(`register error --------------> ${e}`);
+        console.log(e.response.status);
+        setIsBookMarkLoading(false);
+
+        if (e.response.status >= 500) {
+          serverError();
+        }
+        if (e.response.status === 404) {
+          pageNotFoundError();
+        }
+
+        if (e.response.status === 401) {
+          tockenExpire();
+        }
+      });
+  };
+
+  const {data: bookmarkPosts} = useQuery({
+    queryKey: ['bookmarkedPosts'],
+  });
+
+  const CheackingIsBookmark = () => {
+    if (bookmarkPosts) {
+      bookmarkPosts.map(post => {
+        if (item.id === post.id) {
+          setIsBookMark(true);
+        }
+      });
+    }
+  };
 
   useEffect(() => {
     imageSetter();
+    CheackingIsBookmark();
+    // Cheacking if the post is bookmarked or not
   }, [item]);
   const imageSetter = () => {
     const url = item?.coverImage;
@@ -37,6 +130,52 @@ export default function Card({item}) {
     }
   };
 
+  // Errors
+  const serverError = () => {
+    Alert.alert(
+      'Something went wrong',
+      'Internal Server error problem status code 500',
+      [
+        {
+          text: 'OK',
+        },
+      ],
+    );
+  };
+  const pageNotFoundError = () => {
+    Alert.alert(
+      'Something went wrong!!!',
+      'Post is not present in the database you need to restart the application to see the changes',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'OK',
+        },
+      ],
+    );
+  };
+  const tockenExpire = () => {
+    Alert.alert(
+      'Token Expire',
+      'You need to login again to preform this operation, Press "OK" to logout ',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'OK',
+          onPress: () => {
+            logout();
+            navigation.navigate('Login');
+          },
+        },
+      ],
+    );
+  };
   return (
     <TouchableOpacity
       onPress={() => navigation.navigate('PostDetailScreen', item)}
@@ -51,7 +190,32 @@ export default function Card({item}) {
       }}>
       {/* // Bookmark Icon */}
       <TouchableOpacity
-        onPress={() => setIsBookMark(!isBookMark)}
+        onPress={() => {
+          if (userInfo.accessToken) {
+            if (isBookMark) {
+              removeBookmark();
+            } else {
+              bookmark();
+            }
+          }
+          // if user didn't have a account or not logedin
+          else {
+            Alert.alert(
+              "didn't hava a account",
+              'You need to have an accound for bookmarking any post',
+              [
+                {
+                  text: 'Cancel',
+                  style: 'cancel',
+                },
+                {
+                  text: 'Login',
+                  onPress: () => navigation.navigate('Login'),
+                },
+              ],
+            );
+          }
+        }}
         style={{
           position: 'absolute',
           right: moderateScale(0),
@@ -62,11 +226,14 @@ export default function Card({item}) {
           justifyContent: 'center',
           alignItems: 'center',
         }}>
-        <Fontisto
-          name={isBookMark ? 'bookmark-alt' : 'bookmark'}
-          size={moderateScale(25)}
-          // color={'black'}
-        />
+        {isBookMarkLoading ? (
+          <ActivityIndicator color="black" size={'small'} />
+        ) : (
+          <Fontisto
+            name={isBookMark ? 'bookmark-alt' : 'bookmark'}
+            size={moderateScale(25)}
+          />
+        )}
       </TouchableOpacity>
 
       {/* Title and desc container */}

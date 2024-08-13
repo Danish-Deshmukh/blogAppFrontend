@@ -90,9 +90,8 @@ export default function Card({item}) {
           serverError();
         }
         if (e.response.status === 404) {
-          pageNotFoundError();
+          setIsBookMark(false);
         }
-
         if (e.response.status === 401) {
           tockenExpire();
         }

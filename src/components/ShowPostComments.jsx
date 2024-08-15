@@ -198,7 +198,6 @@ const ShowPostComments = ({item}) => {
         paddingBottom: 70,
         // borderWidth: 1
       }}>
-
       {/* Comment Input */}
       <View
         style={{
@@ -301,6 +300,7 @@ const ShowPostComments = ({item}) => {
           </View>
         ) : (
           <FlatList
+            // keyboardDismissMode="on-drag"
             showsVerticalScrollIndicator={false}
             data={data}
             keyExtractor={item => item.id.toString()}

@@ -29,43 +29,76 @@ export default function Card({item}) {
   // Bookmark states and methods
   const [isBookMark, setIsBookMark] = useState(false);
   const [isBookMarkLoading, setIsBookMarkLoading] = useState(false);
+  // QUERY FOR FETCHING POSTS BY User ID
+  const fetchBookmarkedPosts = async () => {
+    const url = `${REST_API_BASE_URL}/bookmarks/user/${userInfo.userId}`;
 
+    const options = {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${userInfo.accessToken}`,
+      },
+    };
+
+    const res = await fetch(url, options);
+
+    if (!res.ok) {
+      throw new Error('Faild to fetch Posts by this category');
+    }
+    const json = await res.json();
+    return json;
+  };
+  const {
+    data: bookmarkPosts,
+    error: bookmarkError,
+    isLoading: bookmarkIsLoading,
+  } = useQuery({
+    queryKey: ['bookmarkedPosts'],
+    queryFn: () => fetchBookmarkedPosts(),
+  });
   const config = {
     headers: {
       Authorization: `Bearer ${userInfo.accessToken}`,
     },
   };
-  const bookmark = async () => {
+  const addBookmark = async () => {
     setIsBookMarkLoading(true);
-    const body = {
-      userId: userInfo.userId,
-      postId: item.id,
-    };
-    await axios
-      .post(`${REST_API_BASE_URL}/bookmarks/add`, body, config)
-      .then(res => {
-        // console.log(res);
-        setIsBookMark(true);
-        ToastAndroid.show('Post added in the bookmark', 1000);
-        setIsBookMarkLoading(false);
-        client.invalidateQueries(['bookmarkedPosts']);
-      })
-      .catch(e => {
-        console.log(`register error --------------> ${e}`);
-        console.log(e.response.status);
-        setIsBookMarkLoading(false);
 
-        if (e.response.status >= 500) {
-          serverError();
-        }
-        if (e.response.status === 404) {
-          pageNotFoundError();
-        }
+    if (CheackingIsBookmark === true) {
+      console.log('inside the cheakng book mark ');
+      ToastAndroid.show('Post is already bookmarked', 1000);
+      setIsBookMarkLoading(false);
+    } else {
+      const body = {
+        userId: userInfo.userId,
+        postId: item.id,
+      };
+      await axios
+        .post(`${REST_API_BASE_URL}/bookmarks/add`, body, config)
+        .then(res => {
+          // console.log(res);
+          setIsBookMark(true);
+          ToastAndroid.show('Post added in the bookmark', 1000);
+          setIsBookMarkLoading(false);
+          client.invalidateQueries(['bookmarkedPosts']);
+        })
+        .catch(e => {
+          console.log(`register error --------------> ${e}`);
+          console.log(e.response.status);
+          setIsBookMarkLoading(false);
 
-        if (e.response.status === 401) {
-          tockenExpire();
-        }
-      });
+          if (e.response.status >= 500) {
+            serverError();
+          }
+          if (e.response.status === 404) {
+            pageNotFoundError();
+          }
+
+          if (e.response.status === 401) {
+            tockenExpire();
+          }
+        });
+    }
   };
   const removeBookmark = async () => {
     setIsBookMarkLoading(true);
@@ -80,7 +113,10 @@ export default function Card({item}) {
         ToastAndroid.show('Post remove from the bookmark', 1000);
         setIsBookMarkLoading(false);
         client.invalidateQueries(['bookmarkedPosts']);
+        client.invalidateQueries(['posts']);
+        client.invalidateQueries(['postByCategory']);
       })
+
       .catch(e => {
         console.log(`register error --------------> ${e}`);
         console.log(e.response.status);
@@ -91,6 +127,7 @@ export default function Card({item}) {
         }
         if (e.response.status === 404) {
           setIsBookMark(false);
+          pageNotFoundError();
         }
         if (e.response.status === 401) {
           tockenExpire();
@@ -98,23 +135,24 @@ export default function Card({item}) {
       });
   };
 
-  const {data: bookmarkPosts} = useQuery({
-    queryKey: ['bookmarkedPosts'],
-  });
-
-  const CheackingIsBookmark = () => {
+  const CheackingIsBookmark = async () => {
     if (bookmarkPosts) {
-      bookmarkPosts.map(post => {
+      await bookmarkPosts.map(post => {
         if (item.id === post.id) {
           setIsBookMark(true);
+          return true;
         }
+        return false;
       });
     }
   };
 
   useEffect(() => {
-    imageSetter();
     CheackingIsBookmark();
+  }, []);
+  useEffect(() => {
+    imageSetter();
+
     // Cheacking if the post is bookmarked or not
   }, [item]);
   const imageSetter = () => {
@@ -194,7 +232,7 @@ export default function Card({item}) {
             if (isBookMark) {
               removeBookmark();
             } else {
-              bookmark();
+              addBookmark();
             }
           }
           // if user didn't have a account or not logedin

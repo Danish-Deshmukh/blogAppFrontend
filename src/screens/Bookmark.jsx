@@ -14,35 +14,45 @@ const Bookmark = () => {
   const client = useQueryClient();
 
   // QUERY FOR FETCHING POSTS BY User ID
-  const fetchBookmarkedPosts = async () => {
-    const url = `${REST_API_BASE_URL}/bookmarks/user/${userInfo.userId}`;
+  // const fetchBookmarkedPosts = async () => {
+  //   const url = `${REST_API_BASE_URL}/bookmarks/user/${userInfo.userId}`;
 
-    const options = {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${userInfo.accessToken}`,
-      },
-    };
+  //   const options = {
+  //     method: 'GET',
+  //     headers: {
+  //       Authorization: `Bearer ${userInfo.accessToken}`,
+  //     },
+  //   };
 
-    const res = await fetch(url, options);
+  //   const res = await fetch(url, options);
 
-    if (!res.ok) {
-      throw new Error('Faild to fetch Posts by this category');
-    }
-    const json = await res.json();
-    return json;
-  };
+  //   if (!res.ok) {
+  //     throw new Error('Faild to fetch Posts by this category');
+  //   }
+  //   const json = await res.json();
+  //   return json;
+  // };
+  // const {
+  //   data: bookmarkedPosts,
+  //   error: bookmarkError,
+  //   isLoading: bookmarkIsLoading,
+  // } = useQuery({
+  //   queryKey: ['bookmarkedPosts'],
+  //   queryFn: () => fetchBookmarkedPosts(),
+  // });
+
   const {
     data: bookmarkedPosts,
     error: bookmarkError,
     isLoading: bookmarkIsLoading,
   } = useQuery({
     queryKey: ['bookmarkedPosts'],
-    queryFn: () => fetchBookmarkedPosts(),
   });
 
   useEffect(() => {
     client.invalidateQueries(['bookmarkedPosts']);
+    client.invalidateQueries(['posts']);
+    client.invalidateQueries(['postByCategory']);
   }, [useIsFocused]);
   if (bookmarkIsLoading) {
     return (

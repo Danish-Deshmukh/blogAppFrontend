@@ -8,6 +8,7 @@ import {
   ToastAndroid,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from 'react-native';
 import React, {
   useCallback,
@@ -21,7 +22,6 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
-import {ActivityIndicator} from 'react-native-paper';
 import Card from '../components/Card';
 import {moderateScale, verticalScale} from 'react-native-size-matters';
 import Modal from 'react-native-modal';

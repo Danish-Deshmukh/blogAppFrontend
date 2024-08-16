@@ -32,13 +32,25 @@ export default function Card({item}) {
   const {data: bookmarkPosts} = useQuery({
     queryKey: ['bookmarkedPosts'],
   });
-
+  // if (bookmarkPosts) {
+  //   bookmarkPosts.map(post => {
+  //     if (item.id === post.id) {
+  //       setIsBookMark(true);
+  //     }
+  //   });
+  // }
+  const checkBookmarkExist = async () => {
+    await bookmarkPosts.map(post => {
+      if (item.id === post.id) return true;
+    });
+    return false;
+  };
   const config = {
     headers: {
       Authorization: `Bearer ${userInfo.accessToken}`,
     },
   };
-  const addBookmark = async () => {
+  const bookmark = async () => {
     setIsBookMarkLoading(true);
 
     const body = {
@@ -71,7 +83,6 @@ export default function Card({item}) {
         }
       });
   };
-
   const removeBookmark = async () => {
     setIsBookMarkLoading(true);
 
@@ -85,10 +96,7 @@ export default function Card({item}) {
         ToastAndroid.show('Post remove from the bookmark', 1000);
         setIsBookMarkLoading(false);
         client.invalidateQueries(['bookmarkedPosts']);
-        client.invalidateQueries(['posts']);
-        client.invalidateQueries(['postByCategory']);
       })
-
       .catch(e => {
         console.log(`register error --------------> ${e}`);
         console.log(e.response.status);
@@ -99,7 +107,6 @@ export default function Card({item}) {
         }
         if (e.response.status === 404) {
           setIsBookMark(false);
-          pageNotFoundError();
         }
         if (e.response.status === 401) {
           tockenExpire();
@@ -116,7 +123,10 @@ export default function Card({item}) {
   };
 
   useEffect(() => {
+    imageSetter();
     CheackingIsBookmark();
+    item.id;
+    // Cheacking if the post is bookmarked or not
   }, [item]);
   const imageSetter = () => {
     const url = item?.coverImage;
@@ -195,7 +205,7 @@ export default function Card({item}) {
             if (isBookMark) {
               removeBookmark();
             } else {
-              addBookmark();
+              bookmark();
             }
           }
           // if user didn't have a account or not logedin

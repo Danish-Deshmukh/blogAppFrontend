@@ -54,7 +54,10 @@ export default function PostDetailScreen(item) {
   const fetchPostById = async id => {
     // console.log('page param');
     // console.log(id);
-    const url = `${REST_API_BASE_URL}/posts/${id}`;
+
+    // If the use is not login then user Id is going to be zero because in the database user with id zero is not present
+    const userId = userInfo.userId === undefined ? 0 : userInfo.userId;
+    const url = `${REST_API_BASE_URL}/posts/${id}?userId=${userId}`;
 
     const options = {
       method: 'GET',
@@ -65,7 +68,8 @@ export default function PostDetailScreen(item) {
       throw new Error(`Faild to fetch Post by ID = ${id}`);
     }
     const json = await res.json();
-    // console.log(json)
+    console.log('this is json data ------------> ');
+    console.log(json);
     return json;
   };
   const id = post.id;

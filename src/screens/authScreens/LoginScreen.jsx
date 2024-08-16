@@ -6,16 +6,17 @@ import {
   View,
   StyleSheet,
 } from 'react-native';
-import Spinner from 'react-native-loading-spinner-overlay';
 import {moderateScale} from 'react-native-size-matters';
 import {Formik} from 'formik';
-import {object, string, number, date, InferType} from 'yup';
+import {object, string} from 'yup';
 import {ActivityIndicator} from 'react-native-paper';
 import Button from '../../components/Button';
-import { AuthContext } from '../../context/AuthContext';
+import {AuthContext} from '../../context/AuthContext';
+import {useQueryClient} from '@tanstack/react-query';
 
 const LoginScreen = ({navigation}) => {
-  const {isLoading, login, userInfo} = useContext(AuthContext);
+  const client = useQueryClient();
+  const {login} = useContext(AuthContext);
   const [showPass, setShowPass] = useState(true);
   const [err, setErr] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -108,7 +109,7 @@ const LoginScreen = ({navigation}) => {
                 <TouchableOpacity onPress={() => setShowPass(!showPass)}>
                   {showPass ? <Text>Show</Text> : <Text>Hide</Text>}
                 </TouchableOpacity>
-            </View>
+              </View>
               {errors.password && (
                 <Text
                   style={{
@@ -129,8 +130,16 @@ const LoginScreen = ({navigation}) => {
                 </Text>
               )}
 
-              <Button onPress={handleSubmit} title="Login" />
-              
+              <Button
+                onPress={() => {
+                  handleSubmit();
+
+                  client.invalidateQueries(['posts']);
+                  client.removeQueries(['posts']);
+                  client.resetQueries();
+                }}
+                title="Login"
+              />
             </View>
           )}
         </Formik>

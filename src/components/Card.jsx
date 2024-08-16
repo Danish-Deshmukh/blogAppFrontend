@@ -27,9 +27,24 @@ export default function Card({item}) {
   const [coverImage, setCoverIamge] = useState();
 
   // Bookmark states and methods
-  const [isBookMark, setIsBookMark] = useState(false);
+  const [isBookMark, setIsBookMark] = useState(item.bookmarked);
   const [isBookMarkLoading, setIsBookMarkLoading] = useState(false);
-
+  const {data: bookmarkPosts} = useQuery({
+    queryKey: ['bookmarkedPosts'],
+  });
+  // if (bookmarkPosts) {
+  //   bookmarkPosts.map(post => {
+  //     if (item.id === post.id) {
+  //       setIsBookMark(true);
+  //     }
+  //   });
+  // }
+  const checkBookmarkExist = async () => {
+    await bookmarkPosts.map(post => {
+      if (item.id === post.id) return true;
+    });
+    return false;
+  };
   const config = {
     headers: {
       Authorization: `Bearer ${userInfo.accessToken}`,
@@ -37,6 +52,7 @@ export default function Card({item}) {
   };
   const bookmark = async () => {
     setIsBookMarkLoading(true);
+
     const body = {
       userId: userInfo.userId,
       postId: item.id,
@@ -98,23 +114,18 @@ export default function Card({item}) {
       });
   };
 
-  const {data: bookmarkPosts} = useQuery({
-    queryKey: ['bookmarkedPosts'],
-  });
-
   const CheackingIsBookmark = () => {
-    if (bookmarkPosts) {
-      bookmarkPosts.map(post => {
-        if (item.id === post.id) {
-          setIsBookMark(true);
-        }
-      });
+    if (item.bookmarked) {
+      console.log(item.id);
+      console.log(item.bookmarked);
+      setIsBookMark(true);
     }
   };
 
   useEffect(() => {
     imageSetter();
     CheackingIsBookmark();
+    item.id;
     // Cheacking if the post is bookmarked or not
   }, [item]);
   const imageSetter = () => {
@@ -244,25 +255,13 @@ export default function Card({item}) {
           paddingHorizontal: moderateScale(15),
           justifyContent: 'center',
         }}>
-        <View
-          style={
-            {
-              // borderWidth: 1,
-            }
-          }>
-          {/* <Text style={[styles.text, styles.titleText]} numberOfLines={1}>
-            {item.id}
-          </Text> */}
+        <View>
+          {/* <Text style={[styles.text, styles.titleText]} numberOfLines={1}>{item.id}</Text> */}
           <Text style={[styles.text, styles.titleText]} numberOfLines={3}>
             {item.title}
           </Text>
         </View>
-        <View
-          style={
-            {
-              // borderWidth: 1,
-            }
-          }>
+        <View>
           <Text style={[styles.text, styles.descText]} numberOfLines={1}>
             {item.description}
           </Text>

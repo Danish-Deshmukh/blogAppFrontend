@@ -50,9 +50,9 @@ const Bookmark = () => {
   });
 
   useEffect(() => {
-    client.invalidateQueries(['bookmarkedPosts']);
-    client.invalidateQueries(['posts']);
-    client.invalidateQueries(['postByCategory']);
+    // client.invalidateQueries(['bookmarkedPosts']);
+    console.log('bookmark posts -------> ');
+    console.log(bookmarkedPosts);
   }, [useIsFocused]);
   if (bookmarkIsLoading) {
     return (
@@ -66,6 +66,7 @@ const Bookmark = () => {
       </View>
     );
   }
+
   if (bookmarkError) {
     return (
       <View
@@ -74,10 +75,11 @@ const Bookmark = () => {
           justifyContent: 'center',
           alignItems: 'center',
         }}>
-        <Text style={{color: 'red'}}>{bookmarkError}</Text>
+        <Text style={{color: 'red'}}>{bookmarkError.message}</Text>
       </View>
     );
   }
+
   return (
     <View
       style={{
@@ -85,7 +87,7 @@ const Bookmark = () => {
         justifyContent: 'center',
         alignItems: 'center',
       }}>
-      {bookmarkedPosts.length === 0 || bookmarkedPosts === undefined ? (
+      {!Array.isArray(bookmarkedPosts) || bookmarkedPosts.length === 0 ? (
         <View
           style={{
             justifyContent: 'center',
@@ -97,7 +99,7 @@ const Bookmark = () => {
             size={moderateScale(105)}
             color={'gray'}
           />
-          <Text>no bookmark</Text>
+          <Text>No bookmarks</Text>
         </View>
       ) : (
         <FlatList

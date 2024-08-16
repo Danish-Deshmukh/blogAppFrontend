@@ -86,7 +86,6 @@ export const AuthProvider = ({children}) => {
         setUserInfo(userInfo);
         AsyncStorage.setItem('userInfo', JSON.stringify(userInfo));
         setIsLoading(false);
-
         findAdmin();
       })
       .catch(e => {

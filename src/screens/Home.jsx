@@ -83,14 +83,16 @@ export default function Home() {
 
   const client = useQueryClient();
 
+  console.log(userInfo.userId);
   // QUERY FOR FETCHING POSTS
   const fetchAllPosts = async pageParam => {
     console.log('get all posts method is called ');
     console.log(REST_API_BASE_URL);
 
     let pageNO = pageParam.pageParam;
+    const userId = userInfo.userId === undefined ? 0 : userInfo.userId;
 
-    const url = `${REST_API_BASE_URL}/posts?pageSize=10&pageNo=${pageNO}&sortBy=id&sortDir=desc`;
+    const url = `${REST_API_BASE_URL}/posts?userId=${userId}&pageSize=10&pageNo=${pageNO}&sortBy=id&sortDir=desc`;
 
     const options = {
       method: 'GET',
@@ -117,6 +119,8 @@ export default function Home() {
     queryFn: fetchAllPosts,
     initialPageParam: 0,
     getNextPageParam: (lastPage, pages) => pages.length,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
   const posts = data?.pages.flat();
 
@@ -170,7 +174,6 @@ export default function Home() {
   const Refresh = () => {
     client.invalidateQueries(['posts']);
     client.invalidateQueries(['postByCategory']);
-    // client.clear();
   };
   useEffect(() => {
     client.invalidateQueries(['postByCategory']);

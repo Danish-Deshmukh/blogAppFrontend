@@ -25,6 +25,7 @@ import BlackButton from '../components/BlackButton';
 import * as Yup from 'yup';
 import axios from 'axios';
 import BlackButtonLoading from '../components/BlackButtonLoading';
+import useErrors from '../CustomHooks/useErrors';
 export default function FinalPrivewScreen(item) {
   const post = item.route.params;
   const content = post.content;
@@ -33,6 +34,7 @@ export default function FinalPrivewScreen(item) {
   const navigation = useNavigation();
   const client = useQueryClient();
   const {userInfo, logout, REST_API_BASE_URL} = useContext(AuthContext);
+  const {serverError, pageNotFoundError, tockenExpire} = useErrors();
   // QUERY AND STATES FOR FETCHING CATEGORIES
   const [category, setCategory] = useState(null);
   const [categoryId, setCategoryId] = useState();
@@ -232,6 +234,9 @@ export default function FinalPrivewScreen(item) {
         if (e.response.status === 404) {
           pageNotFoundError();
         }
+        if (e.response.status >= 500) {
+          serverError();
+        }
 
         if (e.response.status === 401) {
           tockenExpire();
@@ -304,47 +309,14 @@ export default function FinalPrivewScreen(item) {
         if (e.response.status === 404) {
           pageNotFoundError();
         }
-
         if (e.response.status === 401) {
           tockenExpire();
         }
+        if (e.response.status >= 500) {
+          serverError();
+        }
       });
     setSubmitPostLoading(false);
-  };
-
-  const pageNotFoundError = () => {
-    Alert.alert(
-      'Post Not found',
-      'Post is not present in the database you need to restart the application to see the changes ',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'OK',
-        },
-      ],
-    );
-  };
-  const tockenExpire = () => {
-    Alert.alert(
-      'Token Expire',
-      'You need to login again to preform this operation, Press "OK" to logout ',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'OK',
-          onPress: () => {
-            logout();
-            navigation.navigate('Login');
-          },
-        },
-      ],
-    );
   };
   return (
     <View

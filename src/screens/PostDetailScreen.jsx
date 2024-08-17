@@ -17,7 +17,7 @@ import Modal from 'react-native-modal';
 
 // ICONS
 import FeatherIcons from 'react-native-vector-icons/Feather';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import Fontisto from 'react-native-vector-icons/Fontisto';
 import Feather from 'react-native-vector-icons/Feather';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 
@@ -27,6 +27,8 @@ import {useQuery, useQueryClient} from '@tanstack/react-query';
 import ImageView from 'react-native-image-viewing';
 import Markdown from 'react-native-markdown-display';
 import ShowPostComments from '../components/ShowPostComments';
+import useBookmark from '../CustomHooks/useBookmark';
+import useErrors from '../CustomHooks/useErrors';
 
 export default function PostDetailScreen(item) {
   const post = item.route.params;
@@ -34,6 +36,7 @@ export default function PostDetailScreen(item) {
   // console.log(post);
   const {isAdmin, userInfo, logout, REST_API_BASE_URL} =
     useContext(AuthContext);
+  const {serverError, pageNotFoundError, tockenExpire} = useErrors();
   const [auther, setAuther] = useState('Deshmukh');
   const [fullViewImage, setFullViewImage] = useState(false);
   const navigation = useNavigation();
@@ -52,9 +55,6 @@ export default function PostDetailScreen(item) {
 
   // Get Post BY id
   const fetchPostById = async id => {
-    // console.log('page param');
-    // console.log(id);
-
     // If the use is not login then user Id is going to be zero because in the database user with id zero is not present
     const userId = userInfo.userId === undefined ? 0 : userInfo.userId;
     const url = `${REST_API_BASE_URL}/posts/${id}?userId=${userId}`;
@@ -68,8 +68,8 @@ export default function PostDetailScreen(item) {
       throw new Error(`Faild to fetch Post by ID = ${id}`);
     }
     const json = await res.json();
-    console.log('this is json data ------------> ');
-    console.log(json);
+    // console.log('this is json data ------------> ');
+    // console.log(json);
     return json;
   };
   const id = post.id;
@@ -84,8 +84,20 @@ export default function PostDetailScreen(item) {
 
   const [coverImage, setCoverIamge] = useState();
 
+  // Bookmark Hook
+  const {
+    isBookMark,
+    setIsBookMark,
+    addBookmark,
+    removeBookmark,
+    isBookMarkLoading,
+  } = useBookmark();
+
   useEffect(() => {
     imageSetter();
+    if (data?.bookmarked) {
+      setIsBookMark(true);
+    }
   }, [data]);
   const imageSetter = () => {
     const url = data?.coverImage;
@@ -141,53 +153,6 @@ export default function PostDetailScreen(item) {
         }
       });
   };
-  const serverError = () => {
-    Alert.alert(
-      'Something went wrong',
-      'Internal Server error problem status code 500',
-      [
-        {
-          text: 'OK',
-        },
-      ],
-    );
-  };
-  const pageNotFoundError = () => {
-    Alert.alert(
-      'Post Not found',
-      'Post is not present in the database you need to restart the application to see the changes ',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'OK',
-        },
-      ],
-    );
-  };
-  const tockenExpire = () => {
-    Alert.alert(
-      'Token Expire',
-      'You need to login again to preform this operation, Press "OK" to logout ',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'OK',
-          onPress: () => {
-            setShowComments(false);
-            logout();
-            navigation.navigate('Login');
-          },
-        },
-      ],
-    );
-  };
-
   if (postDetailLoading) {
     return (
       <ActivityIndicator style={{flex: 1}} size={'large'} color={'black'} />
@@ -259,6 +224,53 @@ export default function PostDetailScreen(item) {
             alignItems: 'center',
             gap: 30,
           }}>
+          {/* Bookmark Icon here */}
+          {isBookMarkLoading ? (
+            <ActivityIndicator color={'black'} />
+          ) : (
+            <TouchableOpacity
+              onPress={() => {
+                if (userInfo.accessToken) {
+                  if (isBookMark) {
+                    removeBookmark(post.id);
+                  } else {
+                    addBookmark(post.id);
+                  }
+                }
+                // if user didn't have a account or not logedin
+                else {
+                  Alert.alert(
+                    "didn't hava a account",
+                    'You need to have an accound for bookmarking any post',
+                    [
+                      {
+                        text: 'Cancel',
+                        style: 'cancel',
+                      },
+                      {
+                        text: 'Login',
+                        onPress: () => navigation.navigate('Login'),
+                      },
+                    ],
+                  );
+                }
+              }}
+              style={{
+                // borderWidth: 1,
+                borderRadius: moderateScale(40),
+                justifyContent: 'center',
+                alignItems: 'center',
+                zIndex: 2,
+              }}>
+              <Fontisto
+                name={isBookMark ? 'bookmark-alt' : 'bookmark'}
+                // name={'bookmark'}
+                size={moderateScale(28)}
+                color={'black'}
+              />
+            </TouchableOpacity>
+          )}
+
           {/* COMMENT ICON HERE */}
           <TouchableOpacity
             style={{
@@ -390,6 +402,7 @@ export default function PostDetailScreen(item) {
         </View>
       </Animated.View>
 
+      {/* Show comment model */}
       <Modal
         isVisible={showComments}
         onBackButtonPress={() => setShowComments(false)}

@@ -37,11 +37,11 @@ import {
   useScrollToTop,
 } from '@react-navigation/native';
 import {AuthContext} from '../context/AuthContext';
+import useErrors from '../CustomHooks/useErrors';
 
 export default function Home() {
   const {isAdmin, userInfo, REST_API_BASE_URL} = useContext(AuthContext);
   const navigation = useNavigation();
-
   const [showMenuModel, setShowMenuModel] = useState(false);
   const scrollConst = moderateScale(100);
   const scrollY = new Animated.Value(0);
